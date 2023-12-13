@@ -4,10 +4,9 @@ Uniswap AMM implemented in Noir lang for Aztec Network. Frontend is implemented 
 
 ## Run
 
-To run locally
+To run locally you need to have Aztec Sandbox running on "localhost:8080". Then run frontend with:
 
 ```bash
-yarn
 yarn dev
 ```
 
