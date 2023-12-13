@@ -138,7 +138,7 @@ export async function setupBlockchain(log: Log) {
         console.log(
           `${name} balance`,
           "getAddress" in wallet
-            ? await balanceOfPrivate(token as any, wallet)
+            ? await balanceOfPrivate(token, wallet)
             : "N/D",
           "+",
           await balanceOfPublic(token, address),
@@ -288,6 +288,7 @@ export async function balanceOfPrivate(
     .view();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function balanceOfPublic(token: any, address: AztecAddress) {
   if ("methods" in token && "balance_of_public" in token.methods) {
     return token.methods.balance_of_public(address).view();
@@ -392,4 +393,4 @@ function toU120(x: { toString(): string }) {
   return ethers.utils.hexDataSlice(x.toString().toLowerCase(), 17, 32);
 }
 
-type Log = (...args: any[]) => void;
+type Log = (...args: unknown[]) => void;
