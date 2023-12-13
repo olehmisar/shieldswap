@@ -10,6 +10,8 @@ To run locally you need to have Aztec Sandbox running on "localhost:8080". Then 
 yarn dev
 ```
 
+**WARNING**: First open of the page will take a while to deploy and initialize tokens and AMM contracts(logs will be printed to screen and console).
+
 ## Building
 
 To create a production version of your app:
