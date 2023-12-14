@@ -69,7 +69,7 @@
   }
 </script>
 
-<h2>Swap tokens</h2>
+<h2 style="margin-bottom: 0">Swap tokens</h2>
 
 <Form {oninput} {onsubmit} let:loading>
   <h4>From token</h4>
