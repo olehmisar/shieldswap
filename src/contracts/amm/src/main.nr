@@ -1,4 +1,5 @@
 mod interfaces;
+mod types;
 mod utils;
 
 contract Amm {
@@ -40,12 +41,14 @@ contract Amm {
         },
     };
 
+    use crate::types::safe_u120_serialization::{SAFE_U120_SERIALIZED_LEN, SafeU120SerializationMethods};
+
     struct Storage {
         admin: PublicState<AztecAddress, AZTEC_ADDRESS_SERIALIZED_LEN>,
         token0: PublicState<AztecAddress, AZTEC_ADDRESS_SERIALIZED_LEN>,
         token1: PublicState<AztecAddress, AZTEC_ADDRESS_SERIALIZED_LEN>,
-        reserve0: PublicState<Field, FIELD_SERIALIZED_LEN>,
-        reserve1: PublicState<Field, FIELD_SERIALIZED_LEN>,
+        reserve0: PublicState<SafeU120, SAFE_U120_SERIALIZED_LEN>,
+        reserve1: PublicState<SafeU120, SAFE_U120_SERIALIZED_LEN>,
         // balances: Map<EasyPrivateUint>,
     }
 
@@ -55,8 +58,8 @@ contract Amm {
                 admin: PublicState::new(context, 1, AztecAddressSerializationMethods),
                 token0: PublicState::new(context, 2, AztecAddressSerializationMethods),
                 token1: PublicState::new(context, 3, AztecAddressSerializationMethods),
-                reserve0: PublicState::new(context, 4, FieldSerializationMethods),
-                reserve1: PublicState::new(context, 5, FieldSerializationMethods),
+                reserve0: PublicState::new(context, 4, SafeU120SerializationMethods),
+                reserve1: PublicState::new(context, 5, SafeU120SerializationMethods),
                 // balances: Map::new(context, 6, |context, slot| { EasyPrivateUint::new(context, slot) }),
             }
         }
@@ -77,18 +80,13 @@ contract Amm {
         storage.admin.write(admin);
         storage.token0.write(token0);
         storage.token1.write(token1);
-        storage.reserve0.write(0);
-        storage.reserve1.write(0);
+        storage.reserve0.write(SafeU120::min());
+        storage.reserve1.write(SafeU120::min());
     }
 
     #[aztec(private)]
     fn add_liquidity(
-        token0: AztecAddress,
-        token1: AztecAddress,
-        amount0: Field,
-        amount1: Field,
-        nonce0: Field,
-        nonce1: Field
+        token0: AztecAddress, token1: AztecAddress, amount0: Field, amount1: Field, nonce0: Field, nonce1: Field
     ) {
         context.call_public_function(
             context.this_address(),
@@ -142,14 +140,16 @@ contract Amm {
 
     #[aztec(public)]
     internal fn _increase_reserves(amount0: Field, amount1: Field) {
-        storage.reserve0.write(storage.reserve0.read() + amount0);
-        storage.reserve1.write(storage.reserve1.read() + amount1);
+        storage.reserve0.write(storage.reserve0.read().add(SafeU120::new(amount0)));
+        storage.reserve1.write(storage.reserve1.read().add(SafeU120::new(amount1)));
     }
 
     #[aztec(public)]
     internal fn _assert_valid_swap(tokenIn: AztecAddress, tokenOut: AztecAddress, amountIn: Field, amountOut: Field) {
         assert(amountIn != 0, "amountIn must be greater than 0");
         assert(amountOut != 0, "amountOut must be greater than 0");
+        let amountIn = SafeU120::new(amountIn);
+        let amountOut = SafeU120::new(amountOut);
 
         let mut token0 = storage.token0.read();
         let mut token1 = storage.token1.read();
@@ -167,32 +167,35 @@ contract Amm {
             reserveOut = reserve0;
         }
 
-        let reserve_in_after = SafeU120::new(reserveIn + amountIn);
-        let reserve_out_after = SafeU120::new(reserveOut).sub(SafeU120::new(amountOut));
+        let reserve_in_after = reserveIn.add(amountIn);
+        let reserve_out_after = reserveOut.sub(amountOut);
 
-        let k_before = SafeU120::new(reserveIn).mul(SafeU120::new(reserveOut));
+        let k_before = reserveIn.mul(reserveOut);
         let k_after = reserve_in_after.mul(reserve_out_after);
         assert(k_after.ge(k_before), "K invariant");
     }
 
     #[aztec(public)]
     internal fn _update_reserves_after_swap(tokenIn: AztecAddress, tokenOut: AztecAddress, amountIn: Field, amountOut: Field) {
+        let amountIn = SafeU120::new(amountIn);
+        let amountOut = SafeU120::new(amountOut);
+
         let mut reserve0 = storage.reserve0.read();
         let mut reserve1 = storage.reserve1.read();
         let token0 = storage.token0.read();
         if (tokenIn.address == token0.address) {
-            reserve0 += amountIn;
-            reserve1 -= amountOut;
+            reserve0 = reserve0.add(amountIn);
+            reserve1 = reserve1.sub(amountOut);
         } else {
-            reserve1 += amountIn;
-            reserve0 -= amountOut;
+            reserve1 = reserve1.add(amountIn);
+            reserve0 = reserve0.sub(amountOut);
         }
         storage.reserve0.write(reserve0);
         storage.reserve1.write(reserve1);
     }
 
     unconstrained fn reserves() -> [u120; 2] {
-        [SafeU120::new(storage.reserve0.read()).value, SafeU120::new(storage.reserve1.read()).value]
+        [storage.reserve0.read().value, storage.reserve1.read().value]
     }
 
     unconstrained fn tokens() -> [AztecAddress; 2] {
