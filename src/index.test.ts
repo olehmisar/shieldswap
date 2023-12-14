@@ -99,11 +99,11 @@ describe("amm", () => {
     );
   });
 
-  test.skip('fails to swap if "tokenIn" is invalid', async () => {
+  test.todo('fails to swap if "tokenIn" is invalid', async () => {
     expect.fail("todo");
   });
 
-  test.skip('fails to swap if "tokenOut" is invalid', async () => {
+  test.todo('fails to swap if "tokenOut" is invalid', async () => {
     expect.fail("todo");
   });
 
@@ -143,7 +143,7 @@ describe("amm", () => {
     expect(ammBalancesAfter[1]).to.eq(ammBalancesBefore[1] + amountB);
   }
 
-  test("fails to add liquidity if tokens are the same or not in order", async () => {
+  test("fails to add liquidity if tokens are the same", async () => {
     const [token0, token1] = sortTokens(getToken("WETH"), getToken("DAI"));
     await expect(addLiquidity(token1, token1, 1n, 1n, alice)).rejects.toThrow(
       "token0 address is not valid",
@@ -151,6 +151,11 @@ describe("amm", () => {
     await expect(addLiquidity(token0, token0, 1n, 1n, alice)).rejects.toThrow(
       "token1 address is not valid",
     );
+  });
+
+  test.todo("fails to add liquidity if tokens are not in order", async () => {
+    const [token0, token1] = sortTokens(getToken("WETH"), getToken("DAI"));
+    // `addLiquidity` sorts tokens internally. Test it with direct contract call instead
     await expect(addLiquidity(token1, token0, 1n, 1n, alice)).rejects.toThrow(
       "token0 address is not valid",
     );
@@ -166,11 +171,11 @@ describe("amm", () => {
     );
   });
 
-  test.skip('fails to add liquidity if "tokenA" is invalid', async () => {
+  test.todo('fails to add liquidity if "tokenA" is invalid', async () => {
     expect.fail("todo");
   });
 
-  test.skip('fails to add liquidity if "tokenB" is invalid', async () => {
+  test.todo('fails to add liquidity if "tokenB" is invalid', async () => {
     expect.fail("todo");
   });
 
