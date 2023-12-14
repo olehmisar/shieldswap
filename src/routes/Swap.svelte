@@ -58,7 +58,6 @@
     queryFn: () => swapInfoPromise,
   });
 
-  let loading = false;
   async function onSubmit(event: Event) {
     event.preventDefault();
     try {
@@ -69,12 +68,14 @@
       const { swapInput, swapEstimate } = $swapInfo.data;
       await swap(swapInput, swapEstimate, selectedWallet);
       alert("Swap successful");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       alert("Swap error: " + e?.message);
       throw e;
-    } finally {
     }
   }
+
+  let loading = false;
 </script>
 
 <h1>Swap tokens</h1>

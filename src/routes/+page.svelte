@@ -73,7 +73,6 @@
   {#each logs as log}
     <p>{log}</p>
   {/each}
-  {@debug e}
   There was an error deploying the contracts. Restart sandbox and try again.
   {String(e)}
 {/await}

@@ -420,8 +420,9 @@ export async function getTokensAndReserves() {
     tokens: ammContract.methods
       .tokens()
       .view()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then((tokens: any[]) =>
-        tokens.map((t: any) => AztecAddress.fromBigInt(t.address)),
+        tokens.map((t) => AztecAddress.fromBigInt(t.address)),
       ),
     reserves: ammContract.methods.reserves().view(),
   });
