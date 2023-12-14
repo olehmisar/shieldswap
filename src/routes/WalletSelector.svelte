@@ -22,10 +22,10 @@
   Select wallet:
 
   <select bind:value={selectedWalletAddress}>
-    {#each blockchain.wallets as wallet}
-      <option value={wallet.getAddress().toString()}
-        >{wallet.getAddress()}</option
-      >
+    {#each blockchain.wallets as wallet (wallet.getAddress().toString())}
+      <option value={wallet.getAddress().toString()}>
+        {wallet.getAddress()}
+      </option>
     {/each}
   </select>
 </label>

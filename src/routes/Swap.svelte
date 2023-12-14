@@ -6,6 +6,8 @@
     type SwapEstimate,
     type SwapInput,
   } from "$lib/blockchain";
+  import Form from "$lib/components/Form.svelte";
+  import SubmitButton from "$lib/components/SubmitButton.svelte";
   import type { AccountWalletWithPrivateKey } from "@aztec/aztec.js";
   import { createQuery } from "@tanstack/svelte-query";
   import { assert } from "ts-essentials";
@@ -16,10 +18,8 @@
   let selectedTokenIn: string =
     blockchain.tokens[0].contract.address.toString();
 
-  let swapFormEl: HTMLFormElement;
-
-  async function getSwapInputAndEstimate() {
-    const formData = new FormData(swapFormEl);
+  async function getSwapInputAndEstimate(form: HTMLFormElement) {
+    const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     console.log("data", data);
     const tokenIn = blockchain.tokens.find(
@@ -48,9 +48,11 @@
     swapEstimate: SwapEstimate;
   }> | null = null;
   let swapId = 0;
-  function onInput() {
+  function oninput(
+    e: Event & { currentTarget: EventTarget & HTMLFormElement },
+  ) {
     swapId++;
-    swapInfoPromise = getSwapInputAndEstimate();
+    swapInfoPromise = getSwapInputAndEstimate(e.currentTarget);
   }
 
   $: swapInfo = createQuery({
@@ -58,46 +60,24 @@
     queryFn: () => swapInfoPromise,
   });
 
-  async function onSubmit(event: Event) {
-    event.preventDefault();
-    try {
-      assert(event.target === swapFormEl, "invalid form reference");
-      if (!$swapInfo.isSuccess || !$swapInfo.data) {
-        throw new Error("invalid swap info");
-      }
-      const { swapInput, swapEstimate } = $swapInfo.data;
-      await swap(swapInput, swapEstimate, selectedWallet);
-      alert("Swap successful");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      alert("Swap error: " + e?.message);
-      throw e;
+  async function onsubmit() {
+    if (!$swapInfo.isSuccess || !$swapInfo.data) {
+      throw new Error("invalid swap info");
     }
+    const { swapInput, swapEstimate } = $swapInfo.data;
+    await swap(swapInput, swapEstimate, selectedWallet);
   }
-
-  let loading = false;
 </script>
 
-<h1>Swap tokens</h1>
+<h2>Swap tokens</h2>
 
-<form
-  bind:this={swapFormEl}
-  on:input={onInput}
-  on:submit|preventDefault={async (e) => {
-    try {
-      loading = true;
-      await onSubmit(e);
-    } finally {
-      loading = false;
-    }
-  }}
->
-  <h3>From token</h3>
+<Form {oninput} {onsubmit} let:loading>
+  <h4>From token</h4>
   <div class="grid">
     <label for="tokenIn">
       Swap from
       <select id="tokenIn" name="tokenIn" bind:value={selectedTokenIn}>
-        {#each blockchain.tokens as token}
+        {#each blockchain.tokens as token (token.contract.address.toString())}
           <option value={token.contract.address.toString()}>
             {token.symbol}
           </option>
@@ -106,18 +86,24 @@
     </label>
     <label for="amountIn">
       Amount from
-      <input type="number" id="amountIn" name="amountIn" placeholder="100" />
+      <input
+        type="number"
+        id="amountIn"
+        name="amountIn"
+        required
+        placeholder="0"
+      />
     </label>
   </div>
 
-  <h3>To token</h3>
+  <h4>To token</h4>
   <div class="grid">
     <label for="tokenOut">
       Swap to
       <select id="tokenOut" name="tokenOut">
         {#each blockchain.tokens.filter((t) => t.contract.address
               .toString()
-              .toLowerCase() !== selectedTokenIn.toLowerCase()) as token}
+              .toLowerCase() !== selectedTokenIn.toLowerCase()) as token (token.contract.address.toString())}
           <option value={token.contract.address.toString()}>
             {token.symbol}
           </option>
@@ -130,9 +116,11 @@
         readonly
         value={$swapInfo.isSuccess
           ? $swapInfo.data?.swapEstimate.amountOut ?? ""
-          : "Loading..."}
+          : $swapInfo.isError
+            ? String($swapInfo.error.message)
+            : "Loading..."}
       />
     </label>
   </div>
-  <button type="submit" aria-busy={loading} disabled={loading}>Swap</button>
-</form>
+  <SubmitButton {loading}>Swap</SubmitButton>
+</Form>

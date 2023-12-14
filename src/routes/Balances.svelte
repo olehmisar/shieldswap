@@ -4,6 +4,7 @@
     balanceOfPublic,
     type Blockchain,
   } from "$lib/blockchain";
+  import LoadingButton from "$lib/components/LoadingButton.svelte";
   import type { AccountWalletWithPrivateKey } from "@aztec/aztec.js";
   import type { TokenContract } from "@aztec/noir-contracts/types";
   import { createQuery } from "@tanstack/svelte-query";
@@ -40,16 +41,16 @@
 </script>
 
 <h3>Balances</h3>
-<button class="secondary" on:click={() => $balances.refetch()}
-  >Refresh balances</button
->
+<LoadingButton class="secondary" onclick={() => $balances.refetch()}>
+  Refresh balances
+</LoadingButton>
 {#if $balances.isLoading}
   <p>loading...</p>
 {:else if $balances.isError}
   <p>error: {$balances.error}</p>
 {:else if $balances.isSuccess}
   <ul>
-    {#each $balances.data as balance}
+    {#each $balances.data as balance (balance)}
       <li>{balance}</li>
     {/each}
   </ul>

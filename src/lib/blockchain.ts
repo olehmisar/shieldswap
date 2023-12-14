@@ -57,17 +57,16 @@ export async function setupBlockchain(log = defaultLog) {
 
   // The sandbox comes with a set of created accounts. Load them
   log("loading wallets...");
-  const wallets = (await getSandboxAccountsWallets(pxe)).slice(0, 2);
+  const [deployer, alice, bob] = await getSandboxAccountsWallets(pxe);
   log("Done");
-  const deployer = wallets[0];
 
   const { wethToken, daiToken } = await ethers.utils.resolveProperties({
     wethToken: deployTokenCached(
       "weth",
       deployer,
       [
-        { wallet: wallets[0], amount: 100n },
-        { wallet: wallets[1], amount: 20n },
+        { wallet: deployer, amount: 1000n },
+        { wallet: alice, amount: 100n },
       ],
       log,
     ),
@@ -75,8 +74,8 @@ export async function setupBlockchain(log = defaultLog) {
       "dai",
       deployer,
       [
-        { wallet: wallets[0], amount: 30_000n },
-        { wallet: wallets[1], amount: 50_000n },
+        { wallet: deployer, amount: 1_000_000n },
+        { wallet: alice, amount: 30_000n },
       ],
       log,
     ),
@@ -102,39 +101,10 @@ export async function setupBlockchain(log = defaultLog) {
         const [liq0, liq1] = token0.address.equals(wethToken.address)
           ? [wethLiq, daiLiq]
           : [daiLiq, wethLiq];
-        const nonce0 = Fr.random();
-        const nonce1 = Fr.random();
-        log("approving AMM to spend tokens for liquidity...");
-        await approve(
-          deployer,
-          ammContract.address,
-          token0.methods
-            .unshield(deployer.getAddress(), ammContract.address, liq0, nonce0)
-            .request(),
-        );
-        await approve(
-          deployer,
-          ammContract.address,
-          token1.methods
-            .unshield(deployer.getAddress(), ammContract.address, liq1, nonce1)
-            .request(),
-        );
-        log("adding liquidity...");
-        const receipt = await ammContract.methods
-          .add_liquidity(
-            token0.address,
-            token1.address,
-            liq0,
-            liq1,
-            nonce0,
-            nonce1,
-          )
-          .send()
-          .wait();
-        log("add_liquidity tx hash:", receipt.txHash.toString());
+        await addLiquidity(token0, token1, liq0, liq1, deployer, log);
         await printBalances();
-        return ammContract;
       }
+      return ammContract;
     },
     log,
   );
@@ -144,8 +114,8 @@ export async function setupBlockchain(log = defaultLog) {
     for (const [tokenName, token] of Object.entries({ wethToken, daiToken })) {
       console.log(`${tokenName} balances:`);
       for (const [name, wallet] of Object.entries({
-        alice: wallets[0],
-        bob: wallets[1],
+        alice,
+        bob,
         ammContract,
       })) {
         const address =
@@ -164,7 +134,7 @@ export async function setupBlockchain(log = defaultLog) {
   }
 
   return {
-    wallets,
+    wallets: [alice, bob],
     ammContract,
     tokens: [
       { symbol: "WETH", contract: wethToken },
@@ -315,6 +285,59 @@ export async function balanceOfPublic(
   return await token.methods.balance_of_public(address).view();
 }
 
+export async function addLiquidity(
+  token0: TokenContract,
+  token1: TokenContract,
+  amount0: bigint,
+  amount1: bigint,
+  wallet: AccountWalletWithPrivateKey,
+  log = defaultLog,
+) {
+  const nonce0 = Fr.random();
+  const nonce1 = Fr.random();
+  log("approving AMM to spend tokens for liquidity...");
+  await approve(
+    wallet,
+    ammContract.address,
+    token0
+      .withWallet(wallet)
+      .methods.unshield(
+        wallet.getAddress(),
+        ammContract.address,
+        amount0,
+        nonce0,
+      )
+      .request(),
+  );
+  await approve(
+    wallet,
+    ammContract.address,
+    token1
+      .withWallet(wallet)
+      .methods.unshield(
+        wallet.getAddress(),
+        ammContract.address,
+        amount1,
+        nonce1,
+      )
+      .request(),
+  );
+  log("adding liquidity...");
+  const receipt = await ammContract
+    .withWallet(wallet)
+    .methods.add_liquidity(
+      token0.address,
+      token1.address,
+      amount0,
+      amount1,
+      nonce0,
+      nonce1,
+    )
+    .send()
+    .wait();
+  log("add liquidity tx hash:", receipt.txHash.toString());
+}
+
 export async function swap(
   swapInput: SwapInput,
   swapEstimate: SwapEstimate,
@@ -388,7 +411,7 @@ export async function estimateSwap(
   const [reserveIn, reserveOut] = await getReserves(tokenIn, tokenOut);
   log("reserves", reserveIn, reserveOut);
   const amountOut = (reserveOut * amountIn) / (reserveIn + amountIn);
-  log("amountIn", amountIn.toString(), "amountOut", amountOut.toString());
+  log("amountIn", amountIn, "amountOut", amountOut);
   return {
     amountOut,
   };
@@ -433,7 +456,7 @@ export async function getTokensAndReserves() {
   };
 }
 
-function sortTokens(tokenA: TokenContract, tokenB: TokenContract) {
+export function sortTokens(tokenA: TokenContract, tokenB: TokenContract) {
   if (
     tokenA.address.toString().toLowerCase() >
     tokenB.address.toString().toLowerCase()

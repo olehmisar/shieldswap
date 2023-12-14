@@ -4,6 +4,7 @@
     clearContractsCache,
     setupBlockchain,
   } from "$lib/blockchain";
+  import AddLiquidity from "./AddLiquidity.svelte";
   import Balances from "./Balances.svelte";
   import PoolInfo from "./PoolInfo.svelte";
   import Swap from "./Swap.svelte";
@@ -68,6 +69,10 @@
     {/if}
     <hr />
     <PoolInfo {blockchain} />
+    <hr />
+    {#if wallet}
+      <AddLiquidity {blockchain} selectedWallet={wallet} />
+    {/if}
   </main>
 {:catch e}
   {#each logs as log}

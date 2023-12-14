@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getTokensAndReserves, type Blockchain } from "$lib/blockchain";
+  import LoadingButton from "$lib/components/LoadingButton.svelte";
   import { createQuery } from "@tanstack/svelte-query";
 
   export let blockchain: Blockchain;
@@ -25,13 +26,16 @@
 <p>{blockchain.ammContract.address.toString()}</p>
 
 <h4>Reserves</h4>
+<LoadingButton class="secondary" onclick={() => $poolInfo.refetch()}>
+  Refresh reserves
+</LoadingButton>
 {#if $poolInfo.isLoading}
   <p>Loading...</p>
 {:else if $poolInfo.isError}
   <p>Error: {$poolInfo.error.message}</p>
 {:else if $poolInfo.isSuccess}
   <ul>
-    {#each $poolInfo.data.tokenNames as tokenName, i}
+    {#each $poolInfo.data.tokenNames as tokenName, i (tokenName)}
       <li>
         {tokenName}: {$poolInfo.data.reserves[i].toString()}
       </li>
