@@ -167,9 +167,12 @@ contract Amm {
             reserveOut = reserve0;
         }
 
-        let expectedAmountOut = (reserveOut * amountIn) / (reserveIn + amountIn);
-        // TODO: this truncates integers and is NOT correct. Compare K before and after instead
-        assert(amountOut as u120 <= expectedAmountOut as u120, "amountOut is greater than expected");
+        let reserve_in_after = SafeU120::new(reserveIn + amountIn);
+        let reserve_out_after = SafeU120::new(reserveOut).sub(SafeU120::new(amountOut));
+
+        let k_before = SafeU120::new(reserveIn).mul(SafeU120::new(reserveOut));
+        let k_after = reserve_in_after.mul(reserve_out_after);
+        assert(k_after.ge(k_before), "K invariant");
     }
 
     #[aztec(public)]
