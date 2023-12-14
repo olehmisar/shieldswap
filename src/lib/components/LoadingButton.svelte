@@ -1,7 +1,7 @@
 <script lang="ts">
   export let onclick: () => unknown;
-  let clas = ''
-  export { clas as class }
+  let clas = "";
+  export { clas as class };
 
   let loading = false;
 </script>
