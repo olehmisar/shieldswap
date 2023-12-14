@@ -40,7 +40,7 @@
   });
 </script>
 
-<h3>Balances</h3>
+<h3 style="margin-bottom: 0">Balances</h3>
 <LoadingButton class="secondary" onclick={() => $balances.refetch()}>
   Refresh balances
 </LoadingButton>

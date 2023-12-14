@@ -79,20 +79,14 @@ export class AmmContract extends ContractBase {
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public methods!: {
     
-    /** _assert_valid_swap(tokenIn: struct, tokenOut: struct, amountIn: field, amountOut: field) */
-    _assert_valid_swap: ((tokenIn: AztecAddressLike, tokenOut: AztecAddressLike, amountIn: FieldLike, amountOut: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** _finalize_add_liquidity(token0: struct, token1: struct, amount0: field, amount1: field) */
+    _finalize_add_liquidity: ((token0: AztecAddressLike, token1: AztecAddressLike, amount0: FieldLike, amount1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** _assert_valid_tokens(token0: struct, token1: struct) */
-    _assert_valid_tokens: ((token0: AztecAddressLike, token1: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** _increase_reserves(amount0: field, amount1: field) */
-    _increase_reserves: ((amount0: FieldLike, amount1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** _finalize_swap(tokenIn: struct, tokenOut: struct, amountIn: field, amountOut: field) */
+    _finalize_swap: ((tokenIn: AztecAddressLike, tokenOut: AztecAddressLike, amountIn: FieldLike, amountOut: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** _init(admin: struct, token0: struct, token1: struct) */
     _init: ((admin: AztecAddressLike, token0: AztecAddressLike, token1: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** _update_reserves_after_swap(tokenIn: struct, tokenOut: struct, amountIn: field, amountOut: field) */
-    _update_reserves_after_swap: ((tokenIn: AztecAddressLike, tokenOut: AztecAddressLike, amountIn: FieldLike, amountOut: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** add_liquidity(token0: struct, token1: struct, amount0: field, amount1: field, nonce0: field, nonce1: field) */
     add_liquidity: ((token0: AztecAddressLike, token1: AztecAddressLike, amount0: FieldLike, amount1: FieldLike, nonce0: FieldLike, nonce1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;

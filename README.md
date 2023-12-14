@@ -2,6 +2,17 @@
 
 Uniswap AMM implemented in Noir lang for Aztec Network. Frontend is implemented in Svelte.
 
+## Features
+
+- [x] Create a pool with tokens
+- [x] Add liquidity to a pool
+- [x] Swap tokens in a pool
+- [ ] LP tokens
+- [ ] Remove liquidity
+- [ ] Pool factory
+- [ ] Flash swaps (flash loans)
+- [ ] Trading fees
+
 ## Run
 
 To run locally you need to have Aztec Sandbox running on "localhost:8080". Then run frontend with:
