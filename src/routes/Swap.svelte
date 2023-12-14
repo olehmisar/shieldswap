@@ -98,7 +98,7 @@
       <select id="tokenIn" name="tokenIn" bind:value={selectedTokenIn}>
         {#each blockchain.tokens as token}
           <option value={token.contract.address.toString()}>
-            {token.name}
+            {token.symbol}
           </option>
         {/each}
       </select>
@@ -118,7 +118,7 @@
               .toString()
               .toLowerCase() !== selectedTokenIn.toLowerCase()) as token}
           <option value={token.contract.address.toString()}>
-            {token.name}
+            {token.symbol}
           </option>
         {/each}
       </select>

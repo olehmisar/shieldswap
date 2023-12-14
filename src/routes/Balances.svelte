@@ -30,7 +30,7 @@
       Promise.all(
         blockchain.tokens.map(
           async (token) =>
-            `${token.name}: ${await getBalance(
+            `${token.symbol}: ${await getBalance(
               token.contract,
               selectedWallet,
             )}`,

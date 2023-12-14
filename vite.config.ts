@@ -10,5 +10,7 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.{test,spec}.{js,ts}"],
+    testTimeout: 999999,
+    hookTimeout: 999999,
   },
 });

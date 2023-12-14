@@ -1,8 +1,6 @@
 <script lang="ts">
-  import type { Blockchain } from "$lib/blockchain";
-  import { AztecAddress } from "@aztec/aztec.js";
+  import { getTokensAndReserves, type Blockchain } from "$lib/blockchain";
   import { createQuery } from "@tanstack/svelte-query";
-  import { ethers } from "ethers";
 
   export let blockchain: Blockchain;
 
@@ -12,21 +10,13 @@
       blockchain.ammContract.address.toString().toLowerCase(),
     ],
     queryFn: async () => {
-      const { tokens, reserves } = await ethers.utils.resolveProperties({
-        tokens: blockchain.ammContract.methods.tokens().view() as Promise<
-          { address: bigint }[]
-        >,
-        // TODO: replace with balances from token contracts
-        reserves: blockchain.ammContract.methods.reserves().view(),
-      });
-
+      const { tokens, reserves } = await getTokensAndReserves();
       const tokenNames = tokens.map(
         (token, i) =>
-          blockchain.tokens.find((t) =>
-            t.contract.address.equals(AztecAddress.fromBigInt(token.address)),
-          )?.name ?? `Token ${i}`,
+          blockchain.tokens.find((t) => t.contract.address.equals(token))
+            ?.symbol ?? `Token ${i}`,
       );
-      return { tokenNames, reserves };
+      return { tokens, tokenNames, reserves };
     },
   });
 </script>

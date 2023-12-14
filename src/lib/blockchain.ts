@@ -16,20 +16,39 @@ import {
 } from "@aztec/aztec.js";
 import { TokenContract } from "@aztec/noir-contracts/types";
 import { ethers } from "ethers";
-import type { DeepPick } from "ts-essentials";
+import { assert, type DeepPick } from "ts-essentials";
 import { AmmContract } from "../contracts/amm/target/Amm";
 
 const PXE_URL = "http://localhost:8080";
 
-const defaultLog = console.log.bind(console);
+const defaultLog: Log = console.log.bind(console);
 
 const pendingShieldsStorageSlot = new Fr(5);
+
+const storage =
+  typeof localStorage !== "undefined"
+    ? localStorage
+    : {
+        _map: new Map(),
+        getItem(key: string) {
+          return this._map.get(key);
+        },
+        setItem(key: string, value: string) {
+          this._map.set(key, value);
+        },
+        removeItem(key: string) {
+          this._map.delete(key);
+        },
+        key(index: number) {
+          return Array.from(this._map.keys())[index];
+        },
+      };
 
 let ammContract: AmmContract;
 let pxe: PXE;
 export type Blockchain = Awaited<ReturnType<typeof setupBlockchain>>;
 const AMM_CACHE_NAME = "amm";
-export async function setupBlockchain(log: Log) {
+export async function setupBlockchain(log = defaultLog) {
   log("initializing...");
   await init();
   pxe = createPXEClient(PXE_URL);
@@ -67,7 +86,6 @@ export async function setupBlockchain(log: Log) {
     AMM_CACHE_NAME,
     (address) => AmmContract.at(address, deployer),
     async () => {
-      log(`Deploying AMM...`);
       const [token0, token1] = sortTokens(wethToken, daiToken);
       log("tokens", token0.address.toString(), token1.address.toString());
       ammContract = await AmmContract.deploy(
@@ -80,33 +98,25 @@ export async function setupBlockchain(log: Log) {
         .deployed();
       await printBalances();
       {
-        const addLiquidityAmount0 = 1000n;
-        const addLiquidityAmount1 = 23n;
+        const [wethLiq, daiLiq] = [23n, 10000n];
+        const [liq0, liq1] = token0.address.equals(wethToken.address)
+          ? [wethLiq, daiLiq]
+          : [daiLiq, wethLiq];
         const nonce0 = Fr.random();
         const nonce1 = Fr.random();
-        log("approving AMM to spend tokens...");
+        log("approving AMM to spend tokens for liquidity...");
         await approve(
           deployer,
           ammContract.address,
           token0.methods
-            .unshield(
-              deployer.getAddress(),
-              ammContract.address,
-              addLiquidityAmount0,
-              nonce0,
-            )
+            .unshield(deployer.getAddress(), ammContract.address, liq0, nonce0)
             .request(),
         );
         await approve(
           deployer,
           ammContract.address,
           token1.methods
-            .unshield(
-              deployer.getAddress(),
-              ammContract.address,
-              addLiquidityAmount1,
-              nonce1,
-            )
+            .unshield(deployer.getAddress(), ammContract.address, liq1, nonce1)
             .request(),
         );
         log("adding liquidity...");
@@ -114,8 +124,8 @@ export async function setupBlockchain(log: Log) {
           .add_liquidity(
             token0.address,
             token1.address,
-            addLiquidityAmount0,
-            addLiquidityAmount1,
+            liq0,
+            liq1,
             nonce0,
             nonce1,
           )
@@ -157,8 +167,8 @@ export async function setupBlockchain(log: Log) {
     wallets,
     ammContract,
     tokens: [
-      { name: "WETH", contract: wethToken },
-      { name: "DAI", contract: daiToken },
+      { symbol: "WETH", contract: wethToken },
+      { symbol: "DAI", contract: daiToken },
     ],
   };
 }
@@ -205,7 +215,7 @@ async function deployContractCached<T extends { address: AztecAddress }>(
   log: Log,
 ) {
   const key = `${DEPLOYED_CONTRACT_CACHE_PREFIX}${name}`;
-  const cachedAddress = localStorage.getItem(key);
+  const cachedAddress = storage.getItem(key);
   if (cachedAddress) {
     log(`Using cached ${name}...`);
     return connect(AztecAddress.fromString(cachedAddress));
@@ -213,19 +223,19 @@ async function deployContractCached<T extends { address: AztecAddress }>(
   log(`Deploying ${name}...`);
   const contract = await deploy();
   log(`Saving ${name} to cache...`);
-  localStorage.setItem(key, contract.address.toString());
+  storage.setItem(key, contract.address.toString());
   log("Done");
   return contract;
 }
 
 export function clearAmmContractCache() {
-  localStorage.removeItem(`${DEPLOYED_CONTRACT_CACHE_PREFIX}${AMM_CACHE_NAME}`);
+  storage.removeItem(`${DEPLOYED_CONTRACT_CACHE_PREFIX}${AMM_CACHE_NAME}`);
 }
 
 export function clearContractsCache() {
   for (const name of Object.keys(localStorage)) {
     if (name.startsWith(DEPLOYED_CONTRACT_CACHE_PREFIX)) {
-      localStorage.removeItem(name);
+      storage.removeItem(name);
     }
   }
 }
@@ -291,35 +301,34 @@ export async function balanceOfPrivate(
     { withWallet: never; methods: { balance_of_private: never } }
   >,
   wallet: AccountWalletWithPrivateKey,
-) {
-  return token
+): Promise<bigint> {
+  return await token
     .withWallet(wallet)
     .methods.balance_of_private(wallet.getAddress())
     .view();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function balanceOfPublic(token: any, address: AztecAddress) {
-  if ("methods" in token && "balance_of_public" in token.methods) {
-    return token.methods.balance_of_public(address).view();
-  }
-  return "N/A";
+export async function balanceOfPublic(
+  token: TokenContract,
+  address: AztecAddress,
+): Promise<bigint> {
+  return await token.methods.balance_of_public(address).view();
 }
 
 export async function swap(
   swapInput: SwapInput,
   swapEstimate: SwapEstimate,
   wallet: AccountWalletWithPrivateKey,
-  log: Log = defaultLog,
+  log = defaultLog,
 ) {
   if (!ammContract) {
     throw new Error("wait for AMM contract to be deployed");
   }
-  log("swapping...");
+  log("preparing swap...");
 
   const nonce = Fr.random();
 
-  log("approving AMM to spend tokens...");
+  log(`approving AMM to spend ${swapInput.amountIn} tokens for swap...`);
   await approve(
     wallet,
     ammContract.address,
@@ -374,18 +383,52 @@ export type SwapEstimate = {
 
 export async function estimateSwap(
   { tokenIn, tokenOut, amountIn }: SwapInput,
-  log: Log = defaultLog,
+  log = defaultLog,
 ): Promise<SwapEstimate> {
-  const [reserve0, reserve1] = await ammContract.methods.reserves().view();
-  log("reserves", reserve0, reserve1);
-  const [token0] = sortTokens(tokenIn, tokenOut);
-  const [reserveIn, reserveOut] = tokenIn.address.equals(token0.address)
-    ? [reserve0, reserve1]
-    : [reserve1, reserve0];
+  const [reserveIn, reserveOut] = await getReserves(tokenIn, tokenOut);
+  log("reserves", reserveIn, reserveOut);
   const amountOut = (reserveOut * amountIn) / (reserveIn + amountIn);
   log("amountIn", amountIn.toString(), "amountOut", amountOut.toString());
   return {
     amountOut,
+  };
+}
+
+export async function getReserves(
+  tokenA: TokenContract,
+  tokenB: TokenContract,
+) {
+  const {
+    tokens: [token0, token1],
+    reserves: [reserve0, reserve1],
+  } = await getTokensAndReserves();
+
+  if (token0.equals(tokenA.address)) {
+    assert(token1.equals(tokenB.address), "invalid tokenB 1");
+    return [reserve0, reserve1] as const;
+  }
+  assert(token0.equals(tokenB.address), "invalid tokenB 2");
+  assert(token1.equals(tokenA.address), "invalid tokenA 2");
+  return [reserve1, reserve0] as const;
+}
+
+export async function getTokensAndReserves() {
+  const {
+    tokens: [token0, token1],
+    reserves,
+  } = await ethers.utils.resolveProperties({
+    tokens: ammContract.methods
+      .tokens()
+      .view()
+      .then((tokens: any[]) =>
+        tokens.map((t: any) => AztecAddress.fromBigInt(t.address)),
+      ),
+    reserves: ammContract.methods.reserves().view(),
+  });
+  const [reserve0, reserve1] = reserves as bigint[];
+  return {
+    tokens: [token0, token1] as const,
+    reserves: [reserve0, reserve1] as const,
   };
 }
 
