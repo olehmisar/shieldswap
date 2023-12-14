@@ -17,7 +17,7 @@ import {
 import { TokenContract } from "@aztec/noir-contracts/types";
 import { ethers } from "ethers";
 import type { DeepPick } from "ts-essentials";
-import { AmmContract } from "../contracts/amm/--compiler/Amm";
+import { AmmContract } from "../contracts/amm/target/Amm";
 
 const PXE_URL = "http://localhost:8080";
 
@@ -28,14 +28,18 @@ const pendingShieldsStorageSlot = new Fr(5);
 let ammContract: AmmContract;
 let pxe: PXE;
 export type Blockchain = Awaited<ReturnType<typeof setupBlockchain>>;
+const AMM_CACHE_NAME = "amm";
 export async function setupBlockchain(log: Log) {
+  log("initializing...");
   await init();
   pxe = createPXEClient(PXE_URL);
+  log("waiting for sandbox...");
   await waitForSandbox(pxe);
 
   // The sandbox comes with a set of created accounts. Load them
+  log("loading wallets...");
   const wallets = (await getSandboxAccountsWallets(pxe)).slice(0, 2);
-
+  log("Done");
   const deployer = wallets[0];
 
   const { wethToken, daiToken } = await ethers.utils.resolveProperties({
@@ -60,11 +64,12 @@ export async function setupBlockchain(log: Log) {
   });
 
   ammContract = await deployContractCached(
-    "amm",
+    AMM_CACHE_NAME,
     (address) => AmmContract.at(address, deployer),
     async () => {
       log(`Deploying AMM...`);
       const [token0, token1] = sortTokens(wethToken, daiToken);
+      log("tokens", token0.address.toString(), token1.address.toString());
       ammContract = await AmmContract.deploy(
         deployer,
         deployer.getAddress(),
@@ -150,6 +155,7 @@ export async function setupBlockchain(log: Log) {
 
   return {
     wallets,
+    ammContract,
     tokens: [
       { name: "WETH", contract: wethToken },
       { name: "DAI", contract: daiToken },
@@ -198,8 +204,8 @@ async function deployContractCached<T extends { address: AztecAddress }>(
   deploy: () => Promise<T>,
   log: Log,
 ) {
-  name = `${DEPLOYED_CONTRACT_CACHE_PREFIX}${name}`;
-  const cachedAddress = localStorage.getItem(name);
+  const key = `${DEPLOYED_CONTRACT_CACHE_PREFIX}${name}`;
+  const cachedAddress = localStorage.getItem(key);
   if (cachedAddress) {
     log(`Using cached ${name}...`);
     return connect(AztecAddress.fromString(cachedAddress));
@@ -207,12 +213,16 @@ async function deployContractCached<T extends { address: AztecAddress }>(
   log(`Deploying ${name}...`);
   const contract = await deploy();
   log(`Saving ${name} to cache...`);
-  localStorage.setItem(name, contract.address.toString());
+  localStorage.setItem(key, contract.address.toString());
   log("Done");
   return contract;
 }
 
-export async function clearContractsCache() {
+export function clearAmmContractCache() {
+  localStorage.removeItem(`${DEPLOYED_CONTRACT_CACHE_PREFIX}${AMM_CACHE_NAME}`);
+}
+
+export function clearContractsCache() {
   for (const name of Object.keys(localStorage)) {
     if (name.startsWith(DEPLOYED_CONTRACT_CACHE_PREFIX)) {
       localStorage.removeItem(name);
@@ -366,7 +376,7 @@ export async function estimateSwap(
   { tokenIn, tokenOut, amountIn }: SwapInput,
   log: Log = defaultLog,
 ): Promise<SwapEstimate> {
-  const [reserve0, reserve1] = await ammContract.methods.get_reserves().view();
+  const [reserve0, reserve1] = await ammContract.methods.reserves().view();
   log("reserves", reserve0, reserve1);
   const [token0] = sortTokens(tokenIn, tokenOut);
   const [reserveIn, reserveOut] = tokenIn.address.equals(token0.address)
@@ -380,17 +390,13 @@ export async function estimateSwap(
 }
 
 function sortTokens(tokenA: TokenContract, tokenB: TokenContract) {
-  const a = toU120(tokenA.address);
-  const b = toU120(tokenB.address);
-  if (a > b) {
+  if (
+    tokenA.address.toString().toLowerCase() >
+    tokenB.address.toString().toLowerCase()
+  ) {
     return [tokenB, tokenA] as const;
   }
   return [tokenA, tokenB] as const;
-}
-
-function toU120(x: { toString(): string }) {
-  // IDK if this is correct slicing but seems to work
-  return ethers.utils.hexDataSlice(x.toString().toLowerCase(), 17, 32);
 }
 
 type Log = (...args: unknown[]) => void;

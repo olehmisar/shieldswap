@@ -77,63 +77,61 @@
   }
 </script>
 
-<main class="container">
-  <h1>Swap tokens</h1>
+<h1>Swap tokens</h1>
 
-  <form
-    bind:this={swapFormEl}
-    on:input={onInput}
-    on:submit|preventDefault={async (e) => {
-      try {
-        loading = true;
-        await onSubmit(e);
-      } finally {
-        loading = false;
-      }
-    }}
-  >
-    <h3>From token</h3>
-    <div class="grid">
-      <label for="tokenIn">
-        Swap from
-        <select id="tokenIn" name="tokenIn" bind:value={selectedTokenIn}>
-          {#each blockchain.tokens as token}
-            <option value={token.contract.address.toString()}>
-              {token.name}
-            </option>
-          {/each}
-        </select>
-      </label>
-      <label for="amountIn">
-        Amount from
-        <input type="number" id="amountIn" name="amountIn" placeholder="100" />
-      </label>
-    </div>
+<form
+  bind:this={swapFormEl}
+  on:input={onInput}
+  on:submit|preventDefault={async (e) => {
+    try {
+      loading = true;
+      await onSubmit(e);
+    } finally {
+      loading = false;
+    }
+  }}
+>
+  <h3>From token</h3>
+  <div class="grid">
+    <label for="tokenIn">
+      Swap from
+      <select id="tokenIn" name="tokenIn" bind:value={selectedTokenIn}>
+        {#each blockchain.tokens as token}
+          <option value={token.contract.address.toString()}>
+            {token.name}
+          </option>
+        {/each}
+      </select>
+    </label>
+    <label for="amountIn">
+      Amount from
+      <input type="number" id="amountIn" name="amountIn" placeholder="100" />
+    </label>
+  </div>
 
-    <h3>To token</h3>
-    <div class="grid">
-      <label for="tokenOut">
-        Swap to
-        <select id="tokenOut" name="tokenOut">
-          {#each blockchain.tokens.filter((t) => t.contract.address
-                .toString()
-                .toLowerCase() !== selectedTokenIn.toLowerCase()) as token}
-            <option value={token.contract.address.toString()}>
-              {token.name}
-            </option>
-          {/each}
-        </select>
-      </label>
-      <label for="amountOut">
-        Amount to
-        <input
-          readonly
-          value={$swapInfo.isSuccess
-            ? $swapInfo.data?.swapEstimate.amountOut ?? ""
-            : "Loading..."}
-        />
-      </label>
-    </div>
-    <button type="submit" aria-busy={loading} disabled={loading}>Swap</button>
-  </form>
-</main>
+  <h3>To token</h3>
+  <div class="grid">
+    <label for="tokenOut">
+      Swap to
+      <select id="tokenOut" name="tokenOut">
+        {#each blockchain.tokens.filter((t) => t.contract.address
+              .toString()
+              .toLowerCase() !== selectedTokenIn.toLowerCase()) as token}
+          <option value={token.contract.address.toString()}>
+            {token.name}
+          </option>
+        {/each}
+      </select>
+    </label>
+    <label for="amountOut">
+      Amount to
+      <input
+        readonly
+        value={$swapInfo.isSuccess
+          ? $swapInfo.data?.swapEstimate.amountOut ?? ""
+          : "Loading..."}
+      />
+    </label>
+  </div>
+  <button type="submit" aria-busy={loading} disabled={loading}>Swap</button>
+</form>
