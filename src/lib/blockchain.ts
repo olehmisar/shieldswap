@@ -286,13 +286,18 @@ export async function balanceOfPublic(
 }
 
 export async function addLiquidity(
-  token0: TokenContract,
-  token1: TokenContract,
-  amount0: bigint,
-  amount1: bigint,
+  tokenA: TokenContract,
+  tokenB: TokenContract,
+  amountA: bigint,
+  amountB: bigint,
   wallet: AccountWalletWithPrivateKey,
   log = defaultLog,
 ) {
+  const [token0, token1] = sortTokens(tokenA, tokenB);
+  const [amount0, amount1] = token0.address.equals(tokenA.address)
+    ? [amountA, amountB]
+    : [amountB, amountA];
+
   const nonce0 = Fr.random();
   const nonce1 = Fr.random();
   log("approving AMM to spend tokens for liquidity...");

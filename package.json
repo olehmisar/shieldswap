@@ -7,6 +7,7 @@
     "build": "yarn && vite build",
     "preview": "vite preview",
     "compile": "sudo -E env \"PATH=$PATH\" aztec-cli compile src/contracts/amm --typescript ./target",
+    "sandbox": "SANDBOX_VERSION=latest /bin/bash -c \"$(curl -fsSL 'https://sandbox.aztec.network')\" ",
     "check": "yarn && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "yarn && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "yarn test:unit && yarn test:lint",

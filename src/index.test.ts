@@ -1,10 +1,12 @@
 import {
   Blockchain,
+  addLiquidity,
   balanceOfPrivate,
   balanceOfPublic,
   estimateSwap,
   getReserves,
   setupBlockchain,
+  sortTokens,
   swap,
 } from "$lib/blockchain";
 import type { AccountWalletWithPrivateKey } from "@aztec/aztec.js";
@@ -28,20 +30,29 @@ describe("amm", () => {
   }
 
   test("swap WETH to DAI", async () => {
-    const tokenIn = getToken("WETH");
-    const tokenOut = getToken("DAI");
+    await testSwap("WETH", "DAI", 4n);
+  });
+  test("swap DAI to WETH", async () => {
+    await testSwap("DAI", "WETH", 1000n);
+  });
+  async function testSwap(
+    tokenInName: string,
+    tokenOutName: string,
+    amountIn: bigint,
+  ) {
+    const { swapInput, swapEstimate } = await makeSwapInput(
+      tokenInName,
+      tokenOutName,
+      amountIn,
+    );
+    const { tokenIn, tokenOut } = swapInput;
+
     const balancesBefore = await ethers.utils.resolveProperties({
       in: balanceOfPrivate(tokenIn, alice),
       out: balanceOfPrivate(tokenOut, alice),
     });
     const ammBalancesBefore = await reservesAreInSync(tokenIn, tokenOut);
 
-    const swapInput = {
-      tokenIn: tokenIn,
-      tokenOut: tokenOut,
-      amountIn: 10n,
-    };
-    const swapEstimate = await estimateSwap(swapInput);
     await swap(swapInput, swapEstimate, alice);
 
     const balancesAfter = await ethers.utils.resolveProperties({
@@ -60,7 +71,122 @@ describe("amm", () => {
     expect(ammBalancesAfter[1]).to.eq(
       ammBalancesBefore[1] - swapEstimate.amountOut,
     );
+  }
+
+  test("fails to swap if amountOut is too high", async () => {
+    const { swapInput, swapEstimate } = await makeSwapInput(
+      "DAI",
+      "WETH",
+      1000n,
+    );
+    const badSwapEstimate = { amountOut: swapEstimate.amountOut + 1n };
+    await expect(swap(swapInput, badSwapEstimate, alice)).rejects.toThrow(
+      "K invariant",
+    );
   });
+
+  test('fails to swap if "amountIn" is 0', async () => {
+    const { swapInput, swapEstimate } = await makeSwapInput("DAI", "WETH", 0n);
+    await expect(swap(swapInput, swapEstimate, alice)).rejects.toThrow(
+      "amountIn must be greater than 0",
+    );
+  });
+
+  test('fails to swap if "amountOut" is 0', async () => {
+    const { swapInput } = await makeSwapInput("DAI", "WETH", 1000n);
+    await expect(swap(swapInput, { amountOut: 0n }, alice)).rejects.toThrow(
+      "amountOut must be greater than 0",
+    );
+  });
+
+  test.skip('fails to swap if "tokenIn" is invalid', async () => {
+    expect.fail("todo");
+  });
+
+  test.skip('fails to swap if "tokenOut" is invalid', async () => {
+    expect.fail("todo");
+  });
+
+  test("add liquidity to WETH + DAI", async () => {
+    await testAddLiquidity("WETH", "DAI", 4n, 1000n);
+  });
+
+  test("add liquidity to DAI + WETH", async () => {
+    await testAddLiquidity("DAI", "WETH", 1000n, 4n);
+  });
+
+  async function testAddLiquidity(
+    tokenAName: string,
+    tokenBName: string,
+    amountA: bigint,
+    amountB: bigint,
+  ) {
+    const tokenA = getToken(tokenAName);
+    const tokenB = getToken(tokenBName);
+    const balancesBefore = await ethers.utils.resolveProperties({
+      tokenA: balanceOfPrivate(tokenA, alice),
+      tokenB: balanceOfPrivate(tokenB, alice),
+    });
+    const ammBalancesBefore = await reservesAreInSync(tokenA, tokenB);
+
+    await addLiquidity(tokenA, tokenB, amountA, amountB, alice);
+
+    const balancesAfter = await ethers.utils.resolveProperties({
+      tokenA: balanceOfPrivate(tokenA, alice),
+      tokenB: balanceOfPrivate(tokenB, alice),
+    });
+    expect(balancesAfter.tokenA).to.eq(balancesBefore.tokenA - amountA);
+    expect(balancesAfter.tokenB).to.eq(balancesBefore.tokenB - amountB);
+
+    const ammBalancesAfter = await reservesAreInSync(tokenA, tokenB);
+    expect(ammBalancesAfter[0]).to.eq(ammBalancesBefore[0] + amountA);
+    expect(ammBalancesAfter[1]).to.eq(ammBalancesBefore[1] + amountB);
+  }
+
+  test("fails to add liquidity if tokens are the same or not in order", async () => {
+    const [token0, token1] = sortTokens(getToken("WETH"), getToken("DAI"));
+    await expect(addLiquidity(token1, token1, 1n, 1n, alice)).rejects.toThrow(
+      "token0 address is not valid",
+    );
+    await expect(addLiquidity(token0, token0, 1n, 1n, alice)).rejects.toThrow(
+      "token1 address is not valid",
+    );
+    await expect(addLiquidity(token1, token0, 1n, 1n, alice)).rejects.toThrow(
+      "token0 address is not valid",
+    );
+  });
+
+  test('fails to add liquidity if "amount0" or "amount1" is 0', async () => {
+    const [token0, token1] = sortTokens(getToken("WETH"), getToken("DAI"));
+    await expect(addLiquidity(token0, token1, 0n, 1n, alice)).rejects.toThrow(
+      "amount0 must be greater than 0",
+    );
+    await expect(addLiquidity(token0, token1, 1n, 0n, alice)).rejects.toThrow(
+      "amount1 must be greater than 0",
+    );
+  });
+
+  test.skip('fails to add liquidity if "tokenA" is invalid', async () => {
+    expect.fail("todo");
+  });
+
+  test.skip('fails to add liquidity if "tokenB" is invalid', async () => {
+    expect.fail("todo");
+  });
+
+  async function makeSwapInput(
+    tokenInName: string,
+    tokenOutName: string,
+    amountIn: bigint,
+  ) {
+    const swapInput = {
+      tokenIn: getToken(tokenInName),
+      tokenOut: getToken(tokenOutName),
+      amountIn,
+    };
+    const swapEstimate = await estimateSwap(swapInput);
+    return { swapInput, swapEstimate };
+  }
 
   async function reservesAreInSync(
     tokenA: TokenContract,

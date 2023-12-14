@@ -88,22 +88,28 @@ contract Amm {
     fn add_liquidity(
         token0: AztecAddress, token1: AztecAddress, amount0: Field, amount1: Field, nonce0: Field, nonce1: Field
     ) {
-        context.call_public_function(
-            context.this_address(),
-            compute_selector("_assert_valid_tokens((Field),(Field))"),
-            [token0.address, token1.address]
-        );
         let sender = context.msg_sender();
         Token::at(token0.address).unshield(&mut context, sender, context.this_address(), amount0, nonce0);
         Token::at(token1.address).unshield(&mut context, sender, context.this_address(), amount1, nonce1);
 
-        context.call_public_function(
-            context.this_address(),
-            compute_selector("_increase_reserves(Field,Field)"),
-            [amount0, amount1]
-        );
         // // TODO: use K formula
         // storage.balances.at(sender).add((amount0 + amount1), sender);
+
+        context.call_public_function(
+            context.this_address(),
+            compute_selector("_finalize_add_liquidity((Field),(Field),Field,Field)"),
+            [token0.address, token1.address, amount0, amount1]
+        );
+    }
+
+    #[aztec(public)]
+    internal fn _finalize_add_liquidity(token0: AztecAddress, token1: AztecAddress, amount0: Field, amount1: Field) {
+        assert(token0.address == storage.token0.read().address, "token0 address is not valid");
+        assert(token1.address == storage.token1.read().address, "token1 address is not valid");
+        assert(amount0 != 0, "amount0 must be greater than 0");
+        assert(amount1 != 0, "amount1 must be greater than 0");
+        storage.reserve0.write(storage.reserve0.read().add(SafeU120::new(amount0)));
+        storage.reserve1.write(storage.reserve1.read().add(SafeU120::new(amount1)));
     }
 
     #[aztec(private)]
@@ -115,37 +121,19 @@ contract Amm {
         secret_hash: Field,
         nonce: Field
     ) {
-        context.call_public_function(
-            context.this_address(),
-            compute_selector("_assert_valid_swap((Field),(Field),Field,Field)"),
-            [tokenIn.address, tokenOut.address, amountIn, amountOut]
-        );
-
         let sender = context.msg_sender();
         Token::at(tokenIn.address).unshield(&mut context, sender, context.this_address(), amountIn, nonce);
         Token::at(tokenOut.address).shield(&mut context, context.this_address(), amountOut, secret_hash, 0);
 
         context.call_public_function(
             context.this_address(),
-            compute_selector("_update_reserves_after_swap((Field),(Field),Field,Field)"),
+            compute_selector("_finalize_swap((Field),(Field),Field,Field)"),
             [tokenIn.address, tokenOut.address, amountIn, amountOut]
         );
     }
 
     #[aztec(public)]
-    internal fn _assert_valid_tokens(token0: AztecAddress, token1: AztecAddress) {
-        assert(token0.address == storage.token0.read().address, "token0 address is not valid");
-        assert(token1.address == storage.token1.read().address, "token1 address is not valid");
-    }
-
-    #[aztec(public)]
-    internal fn _increase_reserves(amount0: Field, amount1: Field) {
-        storage.reserve0.write(storage.reserve0.read().add(SafeU120::new(amount0)));
-        storage.reserve1.write(storage.reserve1.read().add(SafeU120::new(amount1)));
-    }
-
-    #[aztec(public)]
-    internal fn _assert_valid_swap(tokenIn: AztecAddress, tokenOut: AztecAddress, amountIn: Field, amountOut: Field) {
+    internal fn _finalize_swap(tokenIn: AztecAddress, tokenOut: AztecAddress, amountIn: Field, amountOut: Field) {
         assert(amountIn != 0, "amountIn must be greater than 0");
         assert(amountOut != 0, "amountOut must be greater than 0");
         let amountIn = SafeU120::new(amountIn);
@@ -160,38 +148,33 @@ contract Amm {
 
         let reserve0 = storage.reserve0.read();
         let reserve1 = storage.reserve1.read();
+
+        // validate amountOut
         let mut reserveIn = reserve0;
         let mut reserveOut = reserve1;
         if (tokenIn.address == token1.address) {
             reserveIn = reserve1;
             reserveOut = reserve0;
         }
-
         let reserve_in_after = reserveIn.add(amountIn);
         let reserve_out_after = reserveOut.sub(amountOut);
-
         let k_before = reserveIn.mul(reserveOut);
         let k_after = reserve_in_after.mul(reserve_out_after);
         assert(k_after.ge(k_before), "K invariant");
-    }
 
-    #[aztec(public)]
-    internal fn _update_reserves_after_swap(tokenIn: AztecAddress, tokenOut: AztecAddress, amountIn: Field, amountOut: Field) {
-        let amountIn = SafeU120::new(amountIn);
-        let amountOut = SafeU120::new(amountOut);
-
-        let mut reserve0 = storage.reserve0.read();
-        let mut reserve1 = storage.reserve1.read();
+        // update reserves
+        let mut reserve0Updated = reserve0;
+        let mut reserve1Updated = reserve1;
         let token0 = storage.token0.read();
         if (tokenIn.address == token0.address) {
-            reserve0 = reserve0.add(amountIn);
-            reserve1 = reserve1.sub(amountOut);
+            reserve0Updated = reserve0Updated.add(amountIn);
+            reserve1Updated = reserve1Updated.sub(amountOut);
         } else {
-            reserve1 = reserve1.add(amountIn);
-            reserve0 = reserve0.sub(amountOut);
+            reserve1Updated = reserve1Updated.add(amountIn);
+            reserve0Updated = reserve0Updated.sub(amountOut);
         }
-        storage.reserve0.write(reserve0);
-        storage.reserve1.write(reserve1);
+        storage.reserve0.write(reserve0Updated);
+        storage.reserve1.write(reserve1Updated);
     }
 
     unconstrained fn reserves() -> [u120; 2] {
