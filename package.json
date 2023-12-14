@@ -6,6 +6,7 @@
     "dev": "yarn && vite dev",
     "build": "yarn && vite build",
     "preview": "vite preview",
+    "compile": "sudo -E env \"PATH=$PATH\" aztec-cli compile src/contracts/amm --typescript ./target",
     "check": "yarn && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "yarn && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest",

@@ -18,16 +18,14 @@
   );
 </script>
 
-<main class="container">
-  <label>
-    Select wallet:
+<label>
+  Select wallet:
 
-    <select bind:value={selectedWalletAddress}>
-      {#each blockchain.wallets as wallet}
-        <option value={wallet.getAddress().toString()}
-          >{wallet.getAddress()}</option
-        >
-      {/each}
-    </select>
-  </label>
-</main>
+  <select bind:value={selectedWalletAddress}>
+    {#each blockchain.wallets as wallet}
+      <option value={wallet.getAddress().toString()}
+        >{wallet.getAddress()}</option
+      >
+    {/each}
+  </select>
+</label>

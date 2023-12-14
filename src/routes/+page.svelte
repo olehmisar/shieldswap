@@ -1,6 +1,11 @@
 <script lang="ts">
-  import { clearContractsCache, setupBlockchain } from "$lib/blockchain";
+  import {
+    clearAmmContractCache,
+    clearContractsCache,
+    setupBlockchain,
+  } from "$lib/blockchain";
   import Balances from "./Balances.svelte";
+  import PoolInfo from "./PoolInfo.svelte";
   import Swap from "./Swap.svelte";
   import WalletSelector, { selectedWallet } from "./WalletSelector.svelte";
 
@@ -12,22 +17,41 @@
   });
 </script>
 
-<button
-  class="contrast"
-  on:click={() => {
-    if (
-      !confirm(
-        "Are you sure you want to redeploy contracts (it takes couple minutes)?",
-      )
-    ) {
-      return;
-    }
-    clearContractsCache();
-    window.location.reload();
-  }}
->
-  Redeploy contracts
-</button>
+<div class="grid">
+  <button
+    class="contrast"
+    on:click={() => {
+      if (
+        !confirm(
+          "Are you sure you want to redeploy contracts (it takes couple minutes)?",
+        )
+      ) {
+        return;
+      }
+      clearContractsCache();
+      window.location.reload();
+    }}
+  >
+    Redeploy contracts
+  </button>
+
+  <button
+    class="contrast"
+    on:click={() => {
+      if (
+        !confirm(
+          "Are you sure you want to redeploy AMM (it takes couple minutes)?",
+        )
+      ) {
+        return;
+      }
+      clearAmmContractCache();
+      window.location.reload();
+    }}
+  >
+    Redeploy only AMM
+  </button>
+</div>
 
 {#await blockchainPromise}
   {#each logs as log}
@@ -35,11 +59,16 @@
   {/each}
 {:then blockchain}
   {@const wallet = $selectedWallet}
-  <WalletSelector {blockchain} />
-  {#if wallet}
-    <Balances {blockchain} selectedWallet={wallet} />
-    <Swap {blockchain} selectedWallet={wallet} />
-  {/if}
+  <main class="container">
+    <WalletSelector {blockchain} />
+    {#if wallet}
+      <Balances {blockchain} selectedWallet={wallet} />
+      <hr />
+      <Swap {blockchain} selectedWallet={wallet} />
+    {/if}
+    <hr />
+    <PoolInfo {blockchain} />
+  </main>
 {:catch e}
   {#each logs as log}
     <p>{log}</p>

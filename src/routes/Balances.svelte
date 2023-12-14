@@ -39,20 +39,18 @@
   });
 </script>
 
-<main class="container">
-  <h3>Balances</h3>
-  <button class="secondary" on:click={() => $balances.refetch()}
-    >Refresh balances</button
-  >
-  {#if $balances.isLoading}
-    <p>loading...</p>
-  {:else if $balances.isError}
-    <p>error: {$balances.error}</p>
-  {:else if $balances.isSuccess}
-    <ul>
-      {#each $balances.data as balance}
-        <li>{balance}</li>
-      {/each}
-    </ul>
-  {/if}
-</main>
+<h3>Balances</h3>
+<button class="secondary" on:click={() => $balances.refetch()}
+  >Refresh balances</button
+>
+{#if $balances.isLoading}
+  <p>loading...</p>
+{:else if $balances.isError}
+  <p>error: {$balances.error}</p>
+{:else if $balances.isSuccess}
+  <ul>
+    {#each $balances.data as balance}
+      <li>{balance}</li>
+    {/each}
+  </ul>
+{/if}
