@@ -12,6 +12,10 @@
       name: "Pools",
       href: "/pools",
     },
+    {
+      name: "Flash loan",
+      href: "/flashloan",
+    },
   ];
 </script>
 

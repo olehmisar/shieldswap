@@ -28,4 +28,31 @@ impl Token {
       [from, to, amount, nonce]
     );
   }
+
+  pub fn transfer_public(self: Self, context: &mut PublicContext, from: Field, to: Field, amount: Field, nonce: Field) {
+    context.call_public_function(
+      self.address,
+      compute_selector("transfer_public((Field),(Field),Field,Field)"),
+      [from, to, amount, nonce]
+    );
+  }
+
+}
+
+struct ShieldswapCalee {
+  address: Field,
+}
+
+impl ShieldswapCalee {
+  pub fn at(address: Field) -> Self {
+    Self { address }
+  }
+
+  pub fn shieldswap_call(self: Self, context: &mut PublicContext, amount0: Field, amount1: Field) {
+    context.call_public_function(
+      self.address,
+      compute_selector("shieldswap_call(Field,Field)"),
+      [amount0, amount1]
+    );
+  }
 }

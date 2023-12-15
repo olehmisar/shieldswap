@@ -103,6 +103,9 @@ export class AmmContract extends ContractBase {
     /** swap(token0: struct, token1: struct, amount0_in: field, amount0_out: field, amount1_in: field, amount1_out: field, nonce0: field, nonce1: field, secret_hash: field) */
     swap: ((token0: AztecAddressLike, token1: AztecAddressLike, amount0_in: FieldLike, amount0_out: FieldLike, amount1_in: FieldLike, amount1_out: FieldLike, nonce0: FieldLike, nonce1: FieldLike, secret_hash: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** swap_public(amount0_in: field, amount0_out: field, amount1_in: field, amount1_out: field, nonce0: field, nonce1: field, to: struct, should_call: boolean) */
+    swap_public: ((amount0_in: FieldLike, amount0_out: FieldLike, amount1_in: FieldLike, amount1_out: FieldLike, nonce0: FieldLike, nonce1: FieldLike, to: AztecAddressLike, should_call: boolean) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** tokens() */
     tokens: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
