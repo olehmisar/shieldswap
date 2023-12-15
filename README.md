@@ -1,6 +1,7 @@
 # Aztec AMM
 
 Uniswap AMM implemented in Noir lang for Aztec Network. Frontend is implemented in Svelte.
+<img width="895" alt="image" src="https://github.com/olehmisar/aztec-amm/assets/29802592/871b44d5-176d-432f-a2c0-25cf9cb787f4">
 
 ## Features
 
