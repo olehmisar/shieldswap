@@ -178,28 +178,46 @@ async function deployTokenCached(
 }
 
 const DEPLOYED_CONTRACT_CACHE_PREFIX = "deployed_contract_";
-async function deployContractCached<T extends { address: AztecAddress }>(
+const getContractCacheKey = (name: string) =>
+  `${DEPLOYED_CONTRACT_CACHE_PREFIX}${name}`;
+export async function getContractCached<T>(
+  name: string,
+  connect: (address: AztecAddress) => Promise<T>,
+  log = defaultLog,
+) {
+  const key = getContractCacheKey(name);
+  const cachedAddress = storage.getItem(key);
+  if (!cachedAddress) {
+    return undefined;
+  }
+  log(`Using cached ${name}...`);
+  return connect(AztecAddress.fromString(cachedAddress));
+}
+
+export async function deployContractCached<T extends { address: AztecAddress }>(
   name: string,
   connect: (address: AztecAddress) => Promise<T>,
   deploy: () => Promise<T>,
-  log: Log,
+  log = defaultLog,
 ) {
-  const key = `${DEPLOYED_CONTRACT_CACHE_PREFIX}${name}`;
-  const cachedAddress = storage.getItem(key);
-  if (cachedAddress) {
-    log(`Using cached ${name}...`);
-    return connect(AztecAddress.fromString(cachedAddress));
+  const cached = await getContractCached(name, connect, log);
+  if (cached) {
+    return cached;
   }
   log(`Deploying ${name}...`);
   const contract = await deploy();
   log(`Saving ${name} to cache...`);
-  storage.setItem(key, contract.address.toString());
+  storage.setItem(getContractCacheKey(name), contract.address.toString());
   log("Done");
   return contract;
 }
 
 export function clearAmmContractCache() {
-  storage.removeItem(`${DEPLOYED_CONTRACT_CACHE_PREFIX}${AMM_CACHE_NAME}`);
+  clearContractCache(AMM_CACHE_NAME);
+}
+
+export function clearContractCache(name: string) {
+  storage.removeItem(getContractCacheKey(name));
 }
 
 export function clearContractsCache() {

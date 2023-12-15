@@ -75,8 +75,9 @@ contract Amm {
     }
     #[aztec(public)]
     fn _init(admin: AztecAddress, token0: AztecAddress, token1: AztecAddress) {
-        assert(token0.address != 0, "token0 address is not valid"); // sufficient chekc
-        assert(tokens_are_in_order(token0, token1), "token0 must be less than token1");
+        assert(
+            (token0.address != 0) & (tokens_are_in_order(token0, token1)), "Shieldswap: INVALID_TOKEN_ADDRESSES"
+        );
         storage.admin.write(admin);
         storage.token0.write(token0);
         storage.token1.write(token1);

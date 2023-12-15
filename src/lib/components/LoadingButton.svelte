@@ -1,5 +1,6 @@
 <script lang="ts">
   export let onclick: () => unknown;
+  export let disabled = false;
   let clas = "";
   export { clas as class };
 
@@ -9,7 +10,7 @@
 <button
   type="button"
   aria-busy={loading}
-  disabled={loading}
+  disabled={loading || disabled}
   class={clas}
   on:click={async () => {
     loading = true;

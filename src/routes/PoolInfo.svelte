@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getTokensAndReserves, type Blockchain } from "$lib/blockchain";
   import LoadingButton from "$lib/components/LoadingButton.svelte";
+  import Query from "$lib/components/Query.svelte";
   import { createQuery } from "@tanstack/svelte-query";
 
   export let blockchain: Blockchain;
@@ -29,16 +30,12 @@
 <LoadingButton class="secondary" onclick={() => $poolInfo.refetch()}>
   Refresh reserves
 </LoadingButton>
-{#if $poolInfo.isLoading}
-  <p>Loading...</p>
-{:else if $poolInfo.isError}
-  <p>Error: {$poolInfo.error.message}</p>
-{:else if $poolInfo.isSuccess}
+<Query query={poolInfo} let:data>
   <ul>
-    {#each $poolInfo.data.tokenNames as tokenName, i (tokenName)}
+    {#each data.tokenNames as tokenName, i (tokenName)}
       <li>
-        {tokenName}: {$poolInfo.data.reserves[i].toString()}
+        {tokenName}: {data.reserves[i].toString()}
       </li>
     {/each}
   </ul>
-{/if}
+</Query>
