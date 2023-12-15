@@ -85,17 +85,17 @@ describe("amm", () => {
     );
   });
 
-  test('fails to swap if "amountIn" is 0', async () => {
+  test("fails to swap if amount in is 0", async () => {
     const { swapInput, swapEstimate } = await makeSwapInput("DAI", "WETH", 0n);
     await expect(swap(swapInput, swapEstimate, alice)).rejects.toThrow(
-      "amountIn must be greater than 0",
+      "amount_in must be greater than 0",
     );
   });
 
-  test('fails to swap if "amountOut" is 0', async () => {
+  test("fails to swap if amount out is 0", async () => {
     const { swapInput } = await makeSwapInput("DAI", "WETH", 1000n);
     await expect(swap(swapInput, { amountOut: 0n }, alice)).rejects.toThrow(
-      "amountOut must be greater than 0",
+      "amount_out must be greater than 0",
     );
   });
 

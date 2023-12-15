@@ -21,7 +21,7 @@
       queryClient.invalidateQueries();
       alert("Success");
     } catch (e) {
-      // @ts-expect-error
+      // @ts-expect-error to get `message`
       alert("Error: " + e?.message);
       throw e;
     } finally {

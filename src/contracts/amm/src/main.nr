@@ -114,67 +114,67 @@ contract Amm {
 
     #[aztec(private)]
     fn swap(
-        tokenIn: AztecAddress,
-        tokenOut: AztecAddress,
-        amountIn: Field,
-        amountOut: Field,
+        token_in: AztecAddress,
+        token_out: AztecAddress,
+        amount_in: Field,
+        amount_out: Field,
         secret_hash: Field,
         nonce: Field
     ) {
         let sender = context.msg_sender();
-        Token::at(tokenIn.address).unshield(&mut context, sender, context.this_address(), amountIn, nonce);
-        Token::at(tokenOut.address).shield(&mut context, context.this_address(), amountOut, secret_hash, 0);
+        Token::at(token_in.address).unshield(&mut context, sender, context.this_address(), amount_in, nonce);
+        Token::at(token_out.address).shield(&mut context, context.this_address(), amount_out, secret_hash, 0);
 
         context.call_public_function(
             context.this_address(),
             compute_selector("_finalize_swap((Field),(Field),Field,Field)"),
-            [tokenIn.address, tokenOut.address, amountIn, amountOut]
+            [token_in.address, token_out.address, amount_in, amount_out]
         );
     }
 
     #[aztec(public)]
-    internal fn _finalize_swap(tokenIn: AztecAddress, tokenOut: AztecAddress, amountIn: Field, amountOut: Field) {
-        assert(amountIn != 0, "amountIn must be greater than 0");
-        assert(amountOut != 0, "amountOut must be greater than 0");
-        let amountIn = SafeU120::new(amountIn);
-        let amountOut = SafeU120::new(amountOut);
+    internal fn _finalize_swap(token_in: AztecAddress, token_out: AztecAddress, amount_in: Field, amount_out: Field) {
+        assert(amount_in != 0, "amount_in must be greater than 0");
+        assert(amount_out != 0, "amount_out must be greater than 0");
+        let amount_in = SafeU120::new(amount_in);
+        let amount_out = SafeU120::new(amount_out);
 
         let mut token0 = storage.token0.read();
         let mut token1 = storage.token1.read();
         assert(
-            (((token0.address == tokenIn.address) & (token1.address == tokenOut.address))
-            | ((token0.address == tokenOut.address) & (token1.address == tokenIn.address))), "invalid tokenIn or tokenOut"
+            (((token0.address == token_in.address) & (token1.address == token_out.address))
+            | ((token0.address == token_out.address) & (token1.address == token_in.address))), "invalid token_in or token_out"
         );
 
         let reserve0 = storage.reserve0.read();
         let reserve1 = storage.reserve1.read();
 
-        // validate amountOut
-        let mut reserveIn = reserve0;
-        let mut reserveOut = reserve1;
-        if (tokenIn.address == token1.address) {
-            reserveIn = reserve1;
-            reserveOut = reserve0;
+        // validate amount_out
+        let mut reserve_in = reserve0;
+        let mut reserve_out = reserve1;
+        if (token_in.address == token1.address) {
+            reserve_in = reserve1;
+            reserve_out = reserve0;
         }
-        let reserve_in_after = reserveIn.add(amountIn);
-        let reserve_out_after = reserveOut.sub(amountOut);
-        let k_before = reserveIn.mul(reserveOut);
+        let reserve_in_after = reserve_in.add(amount_in);
+        let reserve_out_after = reserve_out.sub(amount_out);
+        let k_before = reserve_in.mul(reserve_out);
         let k_after = reserve_in_after.mul(reserve_out_after);
         assert(k_after.ge(k_before), "K invariant");
 
         // update reserves
-        let mut reserve0Updated = reserve0;
-        let mut reserve1Updated = reserve1;
+        let mut reserve0_updated = reserve0;
+        let mut reserve1_updated = reserve1;
         let token0 = storage.token0.read();
-        if (tokenIn.address == token0.address) {
-            reserve0Updated = reserve0Updated.add(amountIn);
-            reserve1Updated = reserve1Updated.sub(amountOut);
+        if (token_in.address == token0.address) {
+            reserve0_updated = reserve0_updated.add(amount_in);
+            reserve1_updated = reserve1_updated.sub(amount_out);
         } else {
-            reserve1Updated = reserve1Updated.add(amountIn);
-            reserve0Updated = reserve0Updated.sub(amountOut);
+            reserve1_updated = reserve1_updated.add(amount_in);
+            reserve0_updated = reserve0_updated.sub(amount_out);
         }
-        storage.reserve0.write(reserve0Updated);
-        storage.reserve1.write(reserve1Updated);
+        storage.reserve0.write(reserve0_updated);
+        storage.reserve1.write(reserve1_updated);
     }
 
     unconstrained fn reserves() -> [u120; 2] {

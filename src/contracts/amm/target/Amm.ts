@@ -82,8 +82,8 @@ export class AmmContract extends ContractBase {
     /** _finalize_add_liquidity(token0: struct, token1: struct, amount0: field, amount1: field) */
     _finalize_add_liquidity: ((token0: AztecAddressLike, token1: AztecAddressLike, amount0: FieldLike, amount1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** _finalize_swap(tokenIn: struct, tokenOut: struct, amountIn: field, amountOut: field) */
-    _finalize_swap: ((tokenIn: AztecAddressLike, tokenOut: AztecAddressLike, amountIn: FieldLike, amountOut: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** _finalize_swap(token_in: struct, token_out: struct, amount_in: field, amount_out: field) */
+    _finalize_swap: ((token_in: AztecAddressLike, token_out: AztecAddressLike, amount_in: FieldLike, amount_out: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** _init(admin: struct, token0: struct, token1: struct) */
     _init: ((admin: AztecAddressLike, token0: AztecAddressLike, token1: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -100,8 +100,8 @@ export class AmmContract extends ContractBase {
     /** reserves() */
     reserves: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** swap(tokenIn: struct, tokenOut: struct, amountIn: field, amountOut: field, secret_hash: field, nonce: field) */
-    swap: ((tokenIn: AztecAddressLike, tokenOut: AztecAddressLike, amountIn: FieldLike, amountOut: FieldLike, secret_hash: FieldLike, nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** swap(token_in: struct, token_out: struct, amount_in: field, amount_out: field, secret_hash: field, nonce: field) */
+    swap: ((token_in: AztecAddressLike, token_out: AztecAddressLike, amount_in: FieldLike, amount_out: FieldLike, secret_hash: FieldLike, nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** tokens() */
     tokens: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
