@@ -81,22 +81,33 @@ describe("amm", () => {
     );
     const badSwapEstimate = { amountOut: swapEstimate.amountOut + 1n };
     await expect(swap(swapInput, badSwapEstimate, alice)).rejects.toThrow(
-      "K invariant",
+      "Shieldswap: K",
     );
   });
 
   test("fails to swap if amount in is 0", async () => {
     const { swapInput, swapEstimate } = await makeSwapInput("DAI", "WETH", 0n);
     await expect(swap(swapInput, swapEstimate, alice)).rejects.toThrow(
-      "amount_in must be greater than 0",
+      "Shieldswap: INSUFFICIENT_INPUT_AMOUNT",
     );
   });
 
   test("fails to swap if amount out is 0", async () => {
     const { swapInput } = await makeSwapInput("DAI", "WETH", 1000n);
     await expect(swap(swapInput, { amountOut: 0n }, alice)).rejects.toThrow(
-      "amount_out must be greater than 0",
+      "Shieldswap: INSUFFICIENT_OUTPUT_AMOUNT",
     );
+  });
+
+  test("fails to swap if tokens are the same", async () => {
+    const { swapInput, swapEstimate } = await makeSwapInput(
+      "DAI",
+      "WETH",
+      1000n,
+    );
+    await expect(
+      swap({ ...swapInput, tokenOut: swapInput.tokenIn }, swapEstimate, alice),
+    ).rejects.toThrow("Shieldswap: INVALID_TOKEN_ADDRESSES");
   });
 
   test.todo('fails to swap if "tokenIn" is invalid', async () => {
@@ -104,6 +115,10 @@ describe("amm", () => {
   });
 
   test.todo('fails to swap if "tokenOut" is invalid', async () => {
+    expect.fail("todo");
+  });
+
+  test.todo("fails to swap if tokens are not in order", async () => {
     expect.fail("todo");
   });
 
@@ -146,10 +161,10 @@ describe("amm", () => {
   test("fails to add liquidity if tokens are the same", async () => {
     const [token0, token1] = sortTokens(getToken("WETH"), getToken("DAI"));
     await expect(addLiquidity(token1, token1, 1n, 1n, alice)).rejects.toThrow(
-      "token0 address is not valid",
+      "Shieldswap: INVALID_TOKEN_ADDRESSES",
     );
     await expect(addLiquidity(token0, token0, 1n, 1n, alice)).rejects.toThrow(
-      "token1 address is not valid",
+      "Shieldswap: INVALID_TOKEN_ADDRESSES",
     );
   });
 
@@ -157,17 +172,17 @@ describe("amm", () => {
     const [token0, token1] = sortTokens(getToken("WETH"), getToken("DAI"));
     // `addLiquidity` sorts tokens internally. Test it with direct contract call instead
     await expect(addLiquidity(token1, token0, 1n, 1n, alice)).rejects.toThrow(
-      "token0 address is not valid",
+      "Shieldswap: INVALID_TOKEN_ADDRESSES",
     );
   });
 
   test('fails to add liquidity if "amount0" or "amount1" is 0', async () => {
     const [token0, token1] = sortTokens(getToken("WETH"), getToken("DAI"));
     await expect(addLiquidity(token0, token1, 0n, 1n, alice)).rejects.toThrow(
-      "amount0 must be greater than 0",
+      "Shieldswap: INSUFFICIENT_LIQUIDITY_MINTED",
     );
     await expect(addLiquidity(token0, token1, 1n, 0n, alice)).rejects.toThrow(
-      "amount1 must be greater than 0",
+      "Shieldswap: INSUFFICIENT_LIQUIDITY_MINTED",
     );
   });
 

@@ -210,7 +210,24 @@ export function clearContractsCache() {
   }
 }
 
-async function approve(
+async function approveTokenUnshield(
+  token: TokenContract,
+  wallet: AccountWalletWithPrivateKey,
+  spenderAddress: AztecAddress,
+  amount: bigint,
+  nonce: Fr,
+) {
+  await approveAction(
+    wallet,
+    spenderAddress,
+    token
+      .withWallet(wallet)
+      .methods.unshield(wallet.getAddress(), spenderAddress, amount, nonce)
+      .request(),
+  );
+}
+
+async function approveAction(
   wallet: AccountWalletWithPrivateKey,
   to: AztecAddress,
   request: FunctionCall,
@@ -301,32 +318,11 @@ export async function addLiquidity(
   const nonce0 = Fr.random();
   const nonce1 = Fr.random();
   log("approving AMM to spend tokens for liquidity...");
-  await approve(
-    wallet,
-    ammContract.address,
-    token0
-      .withWallet(wallet)
-      .methods.unshield(
-        wallet.getAddress(),
-        ammContract.address,
-        amount0,
-        nonce0,
-      )
-      .request(),
-  );
-  await approve(
-    wallet,
-    ammContract.address,
-    token1
-      .withWallet(wallet)
-      .methods.unshield(
-        wallet.getAddress(),
-        ammContract.address,
-        amount1,
-        nonce1,
-      )
-      .request(),
-  );
+  await Promise.all([
+    approveTokenUnshield(token0, wallet, ammContract.address, amount0, nonce0),
+    approveTokenUnshield(token1, wallet, ammContract.address, amount1, nonce1),
+  ]);
+
   log("adding liquidity...");
   const receipt = await ammContract
     .withWallet(wallet)
@@ -354,22 +350,34 @@ export async function swap(
   }
   log("preparing swap...");
 
-  const nonce = Fr.random();
+  const [token0, token1] = sortTokens(swapInput.tokenIn, swapInput.tokenOut);
+  const [amount0In, amount0Out, amount1In, amount1Out] =
+    swapInput.tokenIn.address.equals(token0.address)
+      ? [swapInput.amountIn, 0n, 0n, swapEstimate.amountOut]
+      : [0n, swapEstimate.amountOut, swapInput.amountIn, 0n];
 
   log(`approving AMM to spend ${swapInput.amountIn} tokens for swap...`);
-  await approve(
-    wallet,
-    ammContract.address,
-    swapInput.tokenIn
-      .withWallet(wallet)
-      .methods.unshield(
-        wallet.getAddress(),
-        ammContract.address,
-        swapInput.amountIn,
-        nonce,
-      )
-      .request(),
-  );
+
+  const nonce0 = Fr.random();
+  const nonce1 = Fr.random();
+  if (amount0In > 0n) {
+    await approveTokenUnshield(
+      token0,
+      wallet,
+      ammContract.address,
+      amount0In,
+      nonce0,
+    );
+  }
+  if (amount1In > 0n) {
+    await approveTokenUnshield(
+      token1,
+      wallet,
+      ammContract.address,
+      amount1In,
+      nonce1,
+    );
+  }
   const secret = Fr.random();
   const secretHash = computeMessageSecretHash(secret);
   log("secret:", secret.toString());
@@ -378,24 +386,26 @@ export async function swap(
   const receipt = await ammContract
     .withWallet(wallet)
     .methods.swap(
-      swapInput.tokenIn.address,
-      swapInput.tokenOut.address,
-      swapInput.amountIn,
-      swapEstimate.amountOut,
+      token0.address,
+      token1.address,
+      amount0In,
+      amount0Out,
+      amount1In,
+      amount1Out,
+      nonce0,
+      nonce1,
       secretHash,
-      nonce,
     )
     .send()
     .wait();
   log("swap tx hash:", receipt.txHash.toString());
   log(`redeeming ${swapEstimate.amountOut}...`);
-  await redeemShield(
-    swapInput.tokenOut,
-    receipt.txHash,
-    wallet,
-    swapEstimate.amountOut,
-    secret,
-  );
+  if (amount0Out > 0n) {
+    await redeemShield(token0, receipt.txHash, wallet, amount0Out, secret);
+  }
+  if (amount1Out > 0n) {
+    await redeemShield(token1, receipt.txHash, wallet, amount1Out, secret);
+  }
   log("redeemed");
 }
 
