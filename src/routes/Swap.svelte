@@ -1,33 +1,30 @@
 <script lang="ts">
   import {
+    blockchain,
     estimateSwap,
     swap,
-    type Blockchain,
     type SwapEstimate,
     type SwapInput,
   } from "$lib/blockchain";
   import Form from "$lib/components/Form.svelte";
   import SubmitButton from "$lib/components/SubmitButton.svelte";
-  import type { AccountWalletWithPrivateKey } from "@aztec/aztec.js";
+  import { wallet } from "$lib/wallet";
   import { createQuery } from "@tanstack/svelte-query";
   import { assert } from "ts-essentials";
 
-  export let blockchain: Blockchain;
-  export let selectedWallet: AccountWalletWithPrivateKey;
-
   let selectedTokenIn: string =
-    blockchain.tokens[0].contract.address.toString();
+    $blockchain.tokens[0].contract.address.toString();
 
   async function getSwapInputAndEstimate(form: HTMLFormElement) {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     console.log("data", data);
-    const tokenIn = blockchain.tokens.find(
+    const tokenIn = $blockchain.tokens.find(
       (t) =>
         t.contract.address.toString().toLowerCase() ===
         (data.tokenIn as string).toLowerCase(),
     );
-    const tokenOut = blockchain.tokens.find(
+    const tokenOut = $blockchain.tokens.find(
       (t) =>
         t.contract.address.toString().toLowerCase() ===
         (data.tokenOut as string).toLowerCase(),
@@ -65,11 +62,11 @@
       throw new Error("invalid swap info");
     }
     const { swapInput, swapEstimate } = $swapInfo.data;
-    await swap(swapInput, swapEstimate, selectedWallet);
+    await swap(swapInput, swapEstimate, $wallet);
   }
 </script>
 
-<h2 style="margin-bottom: 0">Swap tokens</h2>
+<h1 style="margin-bottom: 0">Swap tokens</h1>
 
 <Form {oninput} {onsubmit} let:loading>
   <h4>From token</h4>
@@ -77,7 +74,7 @@
     <label for="tokenIn">
       Swap from
       <select id="tokenIn" name="tokenIn" bind:value={selectedTokenIn}>
-        {#each blockchain.tokens as token (token.contract.address.toString())}
+        {#each $blockchain.tokens as token (token.contract.address.toString())}
           <option value={token.contract.address.toString()}>
             {token.symbol}
           </option>
@@ -101,7 +98,7 @@
     <label for="tokenOut">
       Swap to
       <select id="tokenOut" name="tokenOut">
-        {#each blockchain.tokens.filter((t) => t.contract.address
+        {#each $blockchain.tokens.filter((t) => t.contract.address
               .toString()
               .toLowerCase() !== selectedTokenIn.toLowerCase()) as token (token.contract.address.toString())}
           <option value={token.contract.address.toString()}>

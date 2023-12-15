@@ -1,19 +1,16 @@
 <script lang="ts">
-  import { addLiquidity, sortTokens, type Blockchain } from "$lib/blockchain";
+  import { addLiquidity, blockchain, sortTokens } from "$lib/blockchain";
   import Form from "$lib/components/Form.svelte";
   import SubmitButton from "$lib/components/SubmitButton.svelte";
-  import type { AccountWalletWithPrivateKey } from "@aztec/aztec.js";
-
-  export let blockchain: Blockchain;
-  export let selectedWallet: AccountWalletWithPrivateKey;
+  import { wallet } from "$lib/wallet";
 
   const [token0_] = sortTokens(
-    blockchain.tokens[0].contract,
-    blockchain.tokens[1].contract,
+    $blockchain.tokens[0].contract,
+    $blockchain.tokens[1].contract,
   );
-  const tokens = token0_.address.equals(blockchain.tokens[0].contract.address)
-    ? [blockchain.tokens[0], blockchain.tokens[1]]
-    : [blockchain.tokens[1], blockchain.tokens[0]];
+  const tokens = token0_.address.equals($blockchain.tokens[0].contract.address)
+    ? [$blockchain.tokens[0], $blockchain.tokens[1]]
+    : [$blockchain.tokens[1], $blockchain.tokens[0]];
 
   async function onsubmit(event: Event & { currentTarget: HTMLFormElement }) {
     const formData = new FormData(event.currentTarget);
@@ -26,7 +23,7 @@
       tokens[1].contract,
       amount0,
       amount1,
-      selectedWallet,
+      $wallet,
     );
   }
 </script>

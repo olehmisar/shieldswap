@@ -16,8 +16,11 @@ import {
 } from "@aztec/aztec.js";
 import { TokenContract } from "@aztec/noir-contracts/types";
 import { ethers } from "ethers";
+import { writable } from "svelte/store";
 import { assert, type DeepPick } from "ts-essentials";
 import { AmmContract } from "../contracts/amm/target/Amm";
+
+export const blockchain = writable<Blockchain>();
 
 const PXE_URL = "http://localhost:8080";
 

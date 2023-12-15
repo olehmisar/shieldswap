@@ -1,50 +1,49 @@
 <script lang="ts">
-  import {
-    balanceOfPrivate,
-    balanceOfPublic,
-    type Blockchain,
-  } from "$lib/blockchain";
+  import { balanceOfPrivate, blockchain } from "$lib/blockchain";
   import LoadingButton from "$lib/components/LoadingButton.svelte";
   import Query from "$lib/components/Query.svelte";
+  import { wallet } from "$lib/wallet";
   import type { AccountWalletWithPrivateKey } from "@aztec/aztec.js";
   import type { TokenContract } from "@aztec/noir-contracts/types";
   import { createQuery } from "@tanstack/svelte-query";
   import { ethers } from "ethers";
 
-  export let blockchain: Blockchain;
-  export let selectedWallet: AccountWalletWithPrivateKey;
-
   async function getBalance(
     token: TokenContract,
     wallet: AccountWalletWithPrivateKey,
   ) {
-    let { privateBalance, publicBalance } =
-      await ethers.utils.resolveProperties({
-        privateBalance: balanceOfPrivate(token, wallet),
-        publicBalance: balanceOfPublic(token, wallet.getAddress()),
-      });
-    return `private: ${privateBalance}, public: ${publicBalance}`;
+    let {
+      privateBalance,
+      //  publicBalance
+    } = await ethers.utils.resolveProperties({
+      privateBalance: balanceOfPrivate(token, wallet),
+      // publicBalance: balanceOfPublic(token, wallet.getAddress()),
+    });
+    return `${privateBalance}`;
   }
 
   $: balances = createQuery({
-    queryKey: ["balances", selectedWallet.getAddress().toString()],
+    queryKey: ["balances", $wallet.getAddress().toString()],
     queryFn: () =>
       Promise.all(
-        blockchain.tokens.map(
+        $blockchain.tokens.map(
           async (token) =>
-            `${token.symbol}: ${await getBalance(
-              token.contract,
-              selectedWallet,
-            )}`,
+            `${token.symbol}: ${await getBalance(token.contract, $wallet)}`,
         ),
       ),
   });
 </script>
 
-<h3 style="margin-bottom: 0">Balances</h3>
-<LoadingButton class="secondary" onclick={() => $balances.refetch()}>
-  Refresh balances
-</LoadingButton>
+<h3 style="margin-bottom: 0">
+  My balances
+  <LoadingButton
+    class="secondary"
+    style="width: auto; display: inline-block; margin-left: 1rem;"
+    onclick={() => $balances.refetch()}
+  >
+    Refresh
+  </LoadingButton>
+</h3>
 <Query query={balances} let:data>
   <ul>
     {#each data as balance (balance)}
