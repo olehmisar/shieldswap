@@ -24,7 +24,16 @@
 <h2 style="margin-bottom: 0">Pool info</h2>
 <p>Pool address: {$blockchain.ammContract.address.toString()}</p>
 
-<h4>Reserves</h4>
+<h4 style="margin-bottom: 0">
+  Reserves
+  <LoadingButton
+    class="outline secondary"
+    inline
+    onclick={() => $poolInfo.refetch()}
+  >
+    Refresh
+  </LoadingButton>
+</h4>
 <Query query={poolInfo} let:data>
   <ul>
     {#each data.tokenNames as tokenName, i (tokenName)}
@@ -34,6 +43,3 @@
     {/each}
   </ul>
 </Query>
-<LoadingButton class="secondary" onclick={() => $poolInfo.refetch()}>
-  Refresh reserves
-</LoadingButton>

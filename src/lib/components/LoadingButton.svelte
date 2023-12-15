@@ -1,7 +1,8 @@
 <script lang="ts">
   export let onclick: () => unknown;
   export let disabled = false;
-  export let style = ''
+  export let style = "";
+  export let inline = false;
   let clas = "";
   export { clas as class };
 
@@ -13,6 +14,7 @@
   aria-busy={loading}
   disabled={loading || disabled}
   class={clas}
+  class:inline
   {style}
   on:click={async () => {
     loading = true;
@@ -25,3 +27,10 @@
 >
   <slot />
 </button>
+
+<style>
+  .inline {
+    display: inline-block;
+    width: auto;
+  }
+</style>

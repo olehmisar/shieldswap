@@ -27,7 +27,7 @@
 
       <li>
         <button
-          class="outline"
+          class="outline secondary"
           on:click={() => {
             if (
               !confirm(
@@ -45,7 +45,7 @@
       </li>
       <li>
         <button
-          class="outline"
+          class="outline secondary"
           on:click={() => {
             if (
               !confirm(

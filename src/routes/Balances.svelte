@@ -37,8 +37,8 @@
 <h3 style="margin-bottom: 0">
   My balances
   <LoadingButton
-    class="secondary"
-    style="width: auto; display: inline-block; margin-left: 1rem;"
+    class="outline secondary"
+    inline
     onclick={() => $balances.refetch()}
   >
     Refresh
