@@ -136,13 +136,26 @@ export async function setupBlockchain(log = defaultLog) {
     }
   }
 
+  const tokens = [
+    { symbol: "WETH", contract: wethToken },
+    { symbol: "DAI", contract: daiToken },
+  ];
+
+  function getToken(token: AztecAddress | string) {
+    const tokenAddress =
+      typeof token === "string" ? AztecAddress.fromString(token) : token;
+    return tokens.find((t) => t.contract.address.equals(tokenAddress));
+  }
+
+  function getTokenSymbolOrAddress(token: AztecAddress) {
+    return getToken(token)?.symbol ?? `Token (${token.toShortString()}`;
+  }
   return {
     wallets: [alice, bob],
     ammContract,
-    tokens: [
-      { symbol: "WETH", contract: wethToken },
-      { symbol: "DAI", contract: daiToken },
-    ],
+    tokens,
+    getToken,
+    getTokenSymbolOrAddress,
   };
 }
 

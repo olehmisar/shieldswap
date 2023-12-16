@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { blockchain, getTokensAndReserves } from "$lib/blockchain";
+  import {
+    balanceOfPublic,
+    blockchain,
+    getTokensAndReserves,
+  } from "$lib/blockchain";
   import LoadingButton from "$lib/components/LoadingButton.svelte";
   import Query from "$lib/components/Query.svelte";
   import { createQuery } from "@tanstack/svelte-query";
@@ -11,12 +15,19 @@
     ],
     queryFn: async () => {
       const { tokens, reserves } = await getTokensAndReserves();
-      const tokenNames = tokens.map(
-        (token, i) =>
-          $blockchain.tokens.find((t) => t.contract.address.equals(token))
-            ?.symbol ?? `Token ${i}`,
+      const balances = await Promise.all(
+        tokens.map(async (token) => {
+          const contract = $blockchain.getToken(token)?.contract;
+          if (!contract) {
+            return "N/A";
+          }
+          return await balanceOfPublic(
+            contract,
+            $blockchain.ammContract.address,
+          );
+        }),
       );
-      return { tokens, tokenNames, reserves };
+      return { tokens, reserves, balances };
     },
   });
 </script>
@@ -35,11 +46,22 @@
   </LoadingButton>
 </h4>
 <Query query={poolInfo} let:data>
-  <ul>
-    {#each data.tokenNames as tokenName, i (tokenName)}
-      <li>
-        {tokenName}: {data.reserves[i].toString()}
-      </li>
-    {/each}
-  </ul>
+  <table>
+    <thead>
+      <tr>
+        <th>Token</th>
+        <th>Reserve</th>
+        <th>Actual balance</th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each data.tokens as token, i (token.toString())}
+        <tr>
+          <td>{$blockchain.getTokenSymbolOrAddress(token)}</td>
+          <td>{data.reserves[i].toString()}</td>
+          <td>{data.balances[i].toString()}</td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
 </Query>

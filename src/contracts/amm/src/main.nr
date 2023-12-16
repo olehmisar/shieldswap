@@ -3,8 +3,6 @@ mod types;
 mod utils;
 
 contract Amm {
-    use crate::interfaces::Token;
-
     // TODO: switch to dep
     use crate::utils::tokens_are_in_order;
     // use dep::token_ordering::tokens_are_in_order;
@@ -42,6 +40,7 @@ contract Amm {
     };
 
     use crate::types::safe_u120_serialization::{SAFE_U120_SERIALIZED_LEN, SafeU120SerializationMethods};
+    use crate::interfaces::{ShieldswapCalee, Token};
 
     struct Storage {
         admin: PublicState<AztecAddress, AZTEC_ADDRESS_SERIALIZED_LEN>,
@@ -112,6 +111,68 @@ contract Amm {
         assert((amount0 != 0) & (amount1 != 0), "Shieldswap: INSUFFICIENT_LIQUIDITY_MINTED");
         storage.reserve0.write(storage.reserve0.read().add(SafeU120::new(amount0)));
         storage.reserve1.write(storage.reserve1.read().add(SafeU120::new(amount1)));
+    }
+
+    #[aztec(public)]
+    fn swap_public(
+        amount0_in: Field,
+        amount0_out: Field,
+        amount1_in: Field,
+        amount1_out: Field,
+        nonce0: Field,
+        nonce1: Field,
+        to: AztecAddress,
+        should_call: bool
+    ) {
+        let token0 = storage.token0.read();
+        let token1 = storage.token1.read();
+
+        let from = context.msg_sender();
+        let this = context.this_address();
+
+        // optimistically transfer tokens out
+        context.call_public_function(
+            context.this_address(),
+            compute_selector("_transfer_if_not_zero((Field),(Field),Field,Field,Field,Field,(Field),(Field))"),
+            [token0.address, token1.address, amount0_out, amount1_out, 0, 0, this, to.address]
+        );
+
+        if (should_call) {
+            ShieldswapCalee::at(to.address).shieldswap_call(&mut context, amount0_out, amount1_out);
+        }
+
+        // transfer tokens in
+        context.call_public_function(
+            context.this_address(),
+            compute_selector("_transfer_if_not_zero((Field),(Field),Field,Field,Field,Field,(Field),(Field))"),
+            [token0.address, token1.address, amount0_in, amount1_in, nonce0, nonce1, from, this]
+        );
+
+        context.call_public_function(
+            context.this_address(),
+            compute_selector("_finalize_swap((Field),(Field),Field,Field,Field,Field)"),
+            [token0.address, token1.address, amount0_in, amount0_out, amount1_in, amount1_out]
+        );
+    }
+
+    // this is needed because the compiler allows only up to 4 public calls per function
+    #[aztec(public)]
+    internal fn _transfer_if_not_zero(
+        token0: AztecAddress,
+        token1: AztecAddress,
+        amount0: Field,
+        amount1: Field,
+        nonce0: Field,
+        nonce1: Field,
+        from: AztecAddress,
+        to: AztecAddress
+    ) {
+        if amount0 != 0 {
+            Token::at(token0.address).transfer_public(&mut context, from.address, to.address, amount0, nonce0);
+        }
+        if amount1 != 0 {
+            Token::at(token1.address).transfer_public(&mut context, from.address, to.address, amount1, nonce1);
+        }
     }
 
     #[aztec(private)]
