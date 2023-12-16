@@ -3,6 +3,10 @@
   import Swap from "./Swap.svelte";
 </script>
 
+<svelte:head>
+  <title>Swap - ShieldSwap</title>
+</svelte:head>
+
 <main class="container">
   <Balances />
   <Swap />

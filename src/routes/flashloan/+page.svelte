@@ -43,6 +43,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Flash loan - ShieldSwap</title>
+</svelte:head>
+
 <main class="container">
   <h1>Flash loan</h1>
   <p>
