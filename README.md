@@ -1,17 +1,17 @@
 # ShieldSwap DEX
 
 A Decentralized Exchange implemented in Noir for Aztec Network. Frontend is implemented in Svelte.
-<img width="895" alt="image" src="https://github.com/olehmisar/aztec-amm/assets/29802592/871b44d5-176d-432f-a2c0-25cf9cb787f4">
+<img width="809" alt="image" src="https://github.com/olehmisar/aztec-amm/assets/29802592/b024170b-9fa5-449b-aee5-ff9bf5a1bd9e">
 
 ## Features
 
 - [x] Create a pool with tokens
 - [x] Add liquidity to a pool
 - [x] Swap tokens in a pool
+- [x] Flash swaps (flash loans)
 - [ ] LP tokens
 - [ ] Remove liquidity
 - [ ] Pool factory
-- [ ] Flash swaps (flash loans)
 - [ ] Trading fees
 
 ## Run
