@@ -4,6 +4,7 @@
     clearContractCache,
     deployContractCached,
     getContractCached,
+    getTokens,
     getTokensAndReserves,
   } from "$lib/blockchain";
   import LoadingButton from "$lib/components/LoadingButton.svelte";
@@ -31,17 +32,28 @@
       if (!flashLoanContract) {
         return null;
       }
+      const tokens = await getTokens();
       const [balance0, balance1] = await flashLoanContract
         .withWallet($wallet)
         .methods.last_balances()
         .view();
-      return [BigInt(balance0), BigInt(balance1)] as const;
+      const balances = [BigInt(balance0), BigInt(balance1)] as const;
+      return { tokens, balances };
     },
   });
 </script>
 
 <main class="container">
-  <h1 style="margin-bottom: 0">Flash loan</h1>
+  <h1>Flash loan</h1>
+  <p>
+    This page demostrates a flash loan. By clicking the "Flash loan!" button, a
+    flash loan contract will:
+  </p>
+  <ol>
+    <li>Borrow all available tokens from the DEX pool</li>
+    <li>Record how many tokens were borrowed</li>
+    <li>Return the tokens to the DEX pool in the same transaction</li>
+  </ol>
   <LoadingButton
     class="secondary"
     onclick={async () => {
@@ -80,14 +92,33 @@
     Flash loan!
   </LoadingButton>
 
-  <h4>Last balances</h4>
+  <LoadingButton
+    disabled={!flashLoanContract}
+    class="secondary"
+    onclick={async () => {
+      if (!flashLoanContract) return;
+      await flashLoanContract
+        .withWallet($wallet)
+        .methods.reset_last_balances()
+        .send()
+        .wait();
+      $lastBalances.refetch();
+    }}
+  >
+    Reset last balances
+  </LoadingButton>
+
+  <h4>Last recorded borrow</h4>
   <Query query={lastBalances} let:data>
     {#if !data}
       <p>Deploy the flash loan contract to see balances</p>
     {:else}
       <ul>
-        {#each data as balance}
-          <li>{balance.toString()}</li>
+        {#each data.tokens as token, i (token.toString())}
+          <li>
+            {$blockchain.getTokenSymbolOrAddress(token)}
+            {data.balances[i].toString()}
+          </li>
         {/each}
       </ul>
     {/if}

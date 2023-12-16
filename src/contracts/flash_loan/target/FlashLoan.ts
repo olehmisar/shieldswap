@@ -91,6 +91,9 @@ export class FlashLoanContract extends ContractBase {
     /** last_balances() */
     last_balances: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** reset_last_balances() */
+    reset_last_balances: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** shieldswap_call(amount0: field, amount1: field) */
     shieldswap_call: ((amount0: FieldLike, amount1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };

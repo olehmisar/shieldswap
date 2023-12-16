@@ -484,18 +484,25 @@ export async function getReserves(
   return [reserve1, reserve0] as const;
 }
 
-export async function getTokensAndReserves() {
-  const {
-    tokens: [token0, token1],
-    reserves,
-  } = await ethers.utils.resolveProperties({
-    tokens: ammContract.methods
+export async function getTokens(): Promise<[AztecAddress, AztecAddress]> {
+  const [token0, token1] =await (
+    ammContract.methods
       .tokens()
       .view()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then((tokens: any[]) =>
         tokens.map((t) => AztecAddress.fromBigInt(t.address)),
-      ),
+      )
+  );
+  return [token0, token1];
+}
+
+export async function getTokensAndReserves() {
+  const {
+    tokens: [token0, token1],
+    reserves,
+  } = await ethers.utils.resolveProperties({
+    tokens: getTokens(),
     reserves: ammContract.methods.reserves().view(),
   });
   const [reserve0, reserve1] = reserves as bigint[];

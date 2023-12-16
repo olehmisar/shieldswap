@@ -63,6 +63,12 @@ contract FlashLoan {
     }
 
     #[aztec(public)]
+    fn reset_last_balances() {
+        storage.last_balance_0.write(SafeU120::min());
+        storage.last_balance_1.write(SafeU120::min());
+    }
+
+    #[aztec(public)]
     fn is_valid_public(message_hash: Field) -> pub Field {
         // approve any action (UNSAFE)
         // this allows shieldswap pair to transfer tokens out of this contract
