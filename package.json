@@ -1,12 +1,12 @@
 {
-  "name": "amm-app",
+  "name": "shieldswap",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "yarn && vite dev",
     "build": "yarn && vite build",
     "preview": "vite preview",
-    "compile": "sudo -E env \"PATH=$PATH\" aztec-cli compile src/contracts/amm --typescript ./target",
+    "compile": "sudo -E env \"PATH=$PATH\" aztec-cli compile src/contracts/shieldswap_pool --typescript ./target",
     "compile:flashloan": "sudo -E env \"PATH=$PATH\" aztec-cli compile src/contracts/flash_loan --typescript ./target",
     "sandbox": "SANDBOX_VERSION=latest /bin/bash -c \"$(curl -fsSL 'https://sandbox.aztec.network')\" ",
     "typecheck": "yarn && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

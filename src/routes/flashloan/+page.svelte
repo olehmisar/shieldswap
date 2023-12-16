@@ -83,7 +83,11 @@
       console.log(`flash loan ${reserve0} and ${reserve1} tokens`);
       await flashLoanContract
         .withWallet($wallet)
-        .methods.flash_loan($blockchain.ammContract.address, reserve0, reserve1)
+        .methods.flash_loan(
+          $blockchain.poolContract.address,
+          reserve0,
+          reserve1,
+        )
         .send()
         .wait();
       $lastBalances.refetch();

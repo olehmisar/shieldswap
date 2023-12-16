@@ -1,5 +1,5 @@
 [package]
-name = "amm"
+name = "shieldswap_pool"
 type = "contract"
 authors = [""]
 compiler_version = ">=0.19.4"

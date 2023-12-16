@@ -18,7 +18,7 @@ import { TokenContract } from "@aztec/noir-contracts/types";
 import { ethers } from "ethers";
 import { writable } from "svelte/store";
 import { assert, type DeepPick } from "ts-essentials";
-import { AmmContract } from "../contracts/amm/target/Amm";
+import { ShieldswapPoolContract } from "../contracts/shieldswap_pool/target/ShieldswapPool";
 
 export const blockchain = writable<Blockchain>();
 
@@ -47,10 +47,10 @@ const storage =
         },
       };
 
-let ammContract: AmmContract;
+let poolContract: ShieldswapPoolContract;
 let pxe: PXE;
 export type Blockchain = Awaited<ReturnType<typeof setupBlockchain>>;
-const AMM_CACHE_NAME = "amm";
+const POOL_CACHE_NAME = "pool";
 export async function setupBlockchain(log = defaultLog) {
   log("initializing...");
   await init();
@@ -84,13 +84,13 @@ export async function setupBlockchain(log = defaultLog) {
     ),
   });
 
-  ammContract = await deployContractCached(
-    AMM_CACHE_NAME,
-    (address) => AmmContract.at(address, deployer),
+  poolContract = await deployContractCached(
+    POOL_CACHE_NAME,
+    (address) => ShieldswapPoolContract.at(address, deployer),
     async () => {
       const [token0, token1] = sortTokens(wethToken, daiToken);
       log("tokens", token0.address.toString(), token1.address.toString());
-      ammContract = await AmmContract.deploy(
+      poolContract = await ShieldswapPoolContract.deploy(
         deployer,
         deployer.getAddress(),
         token0.address,
@@ -107,11 +107,10 @@ export async function setupBlockchain(log = defaultLog) {
         await addLiquidity(token0, token1, liq0, liq1, deployer, log);
         await printBalances();
       }
-      return ammContract;
+      return poolContract;
     },
     log,
   );
-  log(`AMM: ${ammContract.address.toString()}`);
 
   async function printBalances() {
     for (const [tokenName, token] of Object.entries({ wethToken, daiToken })) {
@@ -119,7 +118,7 @@ export async function setupBlockchain(log = defaultLog) {
       for (const [name, wallet] of Object.entries({
         alice,
         bob,
-        ammContract,
+        ShieldswapContract: poolContract,
       })) {
         const address =
           "address" in wallet ? wallet.address : wallet.getAddress();
@@ -152,7 +151,7 @@ export async function setupBlockchain(log = defaultLog) {
   }
   return {
     wallets: [alice, bob],
-    ammContract,
+    poolContract,
     tokens,
     getToken,
     getTokenSymbolOrAddress,
@@ -228,8 +227,8 @@ export async function deployContractCached<T extends { address: AztecAddress }>(
   return contract;
 }
 
-export function clearAmmContractCache() {
-  clearContractCache(AMM_CACHE_NAME);
+export function clearPoolContractCache() {
+  clearContractCache(POOL_CACHE_NAME);
 }
 
 export function clearContractCache(name: string) {
@@ -351,14 +350,14 @@ export async function addLiquidity(
 
   const nonce0 = Fr.random();
   const nonce1 = Fr.random();
-  log("approving AMM to spend tokens for liquidity...");
+  log("approving pool to spend tokens for liquidity...");
   await Promise.all([
-    approveTokenUnshield(token0, wallet, ammContract.address, amount0, nonce0),
-    approveTokenUnshield(token1, wallet, ammContract.address, amount1, nonce1),
+    approveTokenUnshield(token0, wallet, poolContract.address, amount0, nonce0),
+    approveTokenUnshield(token1, wallet, poolContract.address, amount1, nonce1),
   ]);
 
   log("adding liquidity...");
-  const receipt = await ammContract
+  const receipt = await poolContract
     .withWallet(wallet)
     .methods.add_liquidity(
       token0.address,
@@ -379,8 +378,8 @@ export async function swap(
   wallet: AccountWalletWithPrivateKey,
   log = defaultLog,
 ) {
-  if (!ammContract) {
-    throw new Error("wait for AMM contract to be deployed");
+  if (!poolContract) {
+    throw new Error("wait for the pool contract to be deployed");
   }
   log("preparing swap...");
 
@@ -390,7 +389,7 @@ export async function swap(
       ? [swapInput.amountIn, 0n, 0n, swapEstimate.amountOut]
       : [0n, swapEstimate.amountOut, swapInput.amountIn, 0n];
 
-  log(`approving AMM to spend ${swapInput.amountIn} tokens for swap...`);
+  log(`approving the pool to spend ${swapInput.amountIn} tokens for swap...`);
 
   const nonce0 = Fr.random();
   const nonce1 = Fr.random();
@@ -398,7 +397,7 @@ export async function swap(
     await approveTokenUnshield(
       token0,
       wallet,
-      ammContract.address,
+      poolContract.address,
       amount0In,
       nonce0,
     );
@@ -407,7 +406,7 @@ export async function swap(
     await approveTokenUnshield(
       token1,
       wallet,
-      ammContract.address,
+      poolContract.address,
       amount1In,
       nonce1,
     );
@@ -417,7 +416,7 @@ export async function swap(
   log("secret:", secret.toString());
   log("secretHash:", secretHash.toString());
   log("swapping...");
-  const receipt = await ammContract
+  const receipt = await poolContract
     .withWallet(wallet)
     .methods.swap(
       token0.address,
@@ -485,15 +484,13 @@ export async function getReserves(
 }
 
 export async function getTokens(): Promise<[AztecAddress, AztecAddress]> {
-  const [token0, token1] =await (
-    ammContract.methods
-      .tokens()
-      .view()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((tokens: any[]) =>
-        tokens.map((t) => AztecAddress.fromBigInt(t.address)),
-      )
-  );
+  const [token0, token1] = await poolContract.methods
+    .tokens()
+    .view()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .then((tokens: any[]) =>
+      tokens.map((t) => AztecAddress.fromBigInt(t.address)),
+    );
   return [token0, token1];
 }
 
@@ -503,7 +500,7 @@ export async function getTokensAndReserves() {
     reserves,
   } = await ethers.utils.resolveProperties({
     tokens: getTokens(),
-    reserves: ammContract.methods.reserves().view(),
+    reserves: poolContract.methods.reserves().view(),
   });
   const [reserve0, reserve1] = reserves as bigint[];
   return {

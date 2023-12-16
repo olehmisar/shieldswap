@@ -2,7 +2,7 @@ mod interfaces;
 mod types;
 mod utils;
 
-contract Amm {
+contract ShieldswapPool {
     // TODO: switch to dep
     use crate::utils::tokens_are_in_order;
     // use dep::token_ordering::tokens_are_in_order;

@@ -17,7 +17,7 @@ contract FlashLoan {
     use dep::safe_math::SafeU120;
     use dep::authwit::auth::{IS_VALID_SELECTOR, assert_current_call_valid_authwit_public, compute_authwit_message_hash};
 
-    use crate::interfaces::ShieldswapPair;
+    use crate::interfaces::ShieldswapPool;
     use crate::types::safe_u120_serialization::{SAFE_U120_SERIALIZED_LEN, SafeU120SerializationMethods};
 
     struct Storage {
@@ -38,9 +38,8 @@ contract FlashLoan {
     fn constructor() {}
 
     #[aztec(public)]
-    fn flash_loan(pair: AztecAddress, amount0: Field, amount1: Field) {
-        debug_log("start flash loan");
-        ShieldswapPair::at(pair.address).swap_public(
+    fn flash_loan(pool: AztecAddress, amount0: Field, amount1: Field) {
+        ShieldswapPool::at(pool.address).swap_public(
             &mut context,
             amount0,
             amount0,
@@ -51,15 +50,12 @@ contract FlashLoan {
             context.this_address(),
             true
         );
-        debug_log("end flash loan");
     }
 
     #[aztec(public)]
     fn shieldswap_call(amount0: Field, amount1: Field) {
-        debug_log("start shieldswap call");
         storage.last_balance_0.write(SafeU120::new(amount0));
         storage.last_balance_1.write(SafeU120::new(amount1));
-        debug_log("end shieldswap call");
     }
 
     #[aztec(public)]
@@ -71,7 +67,7 @@ contract FlashLoan {
     #[aztec(public)]
     fn is_valid_public(message_hash: Field) -> pub Field {
         // approve any action (UNSAFE)
-        // this allows shieldswap pair to transfer tokens out of this contract
+        // this allows shieldswap pool to transfer tokens out of this contract
         IS_VALID_SELECTOR
     }
 

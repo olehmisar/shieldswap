@@ -11,7 +11,7 @@
   $: poolInfo = createQuery({
     queryKey: [
       "poolInfo",
-      $blockchain.ammContract.address.toString().toLowerCase(),
+      $blockchain.poolContract.address.toString().toLowerCase(),
     ],
     queryFn: async () => {
       const { tokens, reserves } = await getTokensAndReserves();
@@ -23,7 +23,7 @@
           }
           return await balanceOfPublic(
             contract,
-            $blockchain.ammContract.address,
+            $blockchain.poolContract.address,
           );
         }),
       );
@@ -33,7 +33,7 @@
 </script>
 
 <h2 style="margin-bottom: 0">Pool info</h2>
-<p>Pool address: {$blockchain.ammContract.address.toString()}</p>
+<p>Pool address: {$blockchain.poolContract.address.toString()}</p>
 
 <h4 style="margin-bottom: 0">
   Reserves

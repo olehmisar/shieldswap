@@ -82,8 +82,8 @@ export class FlashLoanContract extends ContractBase {
     /** compute_note_hash_and_nullifier(contract_address: field, nonce: field, storage_slot: field, serialized_note: array) */
     compute_note_hash_and_nullifier: ((contract_address: FieldLike, nonce: FieldLike, storage_slot: FieldLike, serialized_note: FieldLike[]) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** flash_loan(pair: struct, amount0: field, amount1: field) */
-    flash_loan: ((pair: AztecAddressLike, amount0: FieldLike, amount1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** flash_loan(pool: struct, amount0: field, amount1: field) */
+    flash_loan: ((pool: AztecAddressLike, amount0: FieldLike, amount1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** is_valid_public(message_hash: field) */
     is_valid_public: ((message_hash: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;

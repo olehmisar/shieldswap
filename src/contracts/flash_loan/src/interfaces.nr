@@ -4,11 +4,11 @@ use dep::aztec::{
   types::address::AztecAddress,
 };
 
-struct ShieldswapPair {
+struct ShieldswapPool {
   address: Field,
 }
 
-impl ShieldswapPair {
+impl ShieldswapPool {
   pub fn at(address: Field) -> Self {
     Self { address }
   }

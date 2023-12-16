@@ -15,7 +15,7 @@ import { ethers } from "ethers";
 import { assert } from "ts-essentials";
 import { beforeAll, describe, expect, test } from "vitest";
 
-describe("amm", () => {
+describe("Pool", () => {
   let blockchain: Blockchain;
   let alice: AccountWalletWithPrivateKey;
   beforeAll(async () => {
@@ -51,7 +51,7 @@ describe("amm", () => {
       in: balanceOfPrivate(tokenIn, alice),
       out: balanceOfPrivate(tokenOut, alice),
     });
-    const ammBalancesBefore = await reservesAreInSync(tokenIn, tokenOut);
+    const poolBalancesBefore = await reservesAreInSync(tokenIn, tokenOut);
 
     await swap(swapInput, swapEstimate, alice);
 
@@ -64,12 +64,12 @@ describe("amm", () => {
       balancesBefore.out + swapEstimate.amountOut,
     );
 
-    const ammBalancesAfter = await reservesAreInSync(tokenIn, tokenOut);
-    expect(ammBalancesAfter[0]).to.eq(
-      ammBalancesBefore[0] + swapInput.amountIn,
+    const poolBalancesAfter = await reservesAreInSync(tokenIn, tokenOut);
+    expect(poolBalancesAfter[0]).to.eq(
+      poolBalancesBefore[0] + swapInput.amountIn,
     );
-    expect(ammBalancesAfter[1]).to.eq(
-      ammBalancesBefore[1] - swapEstimate.amountOut,
+    expect(poolBalancesAfter[1]).to.eq(
+      poolBalancesBefore[1] - swapEstimate.amountOut,
     );
   }
 
@@ -142,7 +142,7 @@ describe("amm", () => {
       tokenA: balanceOfPrivate(tokenA, alice),
       tokenB: balanceOfPrivate(tokenB, alice),
     });
-    const ammBalancesBefore = await reservesAreInSync(tokenA, tokenB);
+    const poolBalancesBefore = await reservesAreInSync(tokenA, tokenB);
 
     await addLiquidity(tokenA, tokenB, amountA, amountB, alice);
 
@@ -153,9 +153,9 @@ describe("amm", () => {
     expect(balancesAfter.tokenA).to.eq(balancesBefore.tokenA - amountA);
     expect(balancesAfter.tokenB).to.eq(balancesBefore.tokenB - amountB);
 
-    const ammBalancesAfter = await reservesAreInSync(tokenA, tokenB);
-    expect(ammBalancesAfter[0]).to.eq(ammBalancesBefore[0] + amountA);
-    expect(ammBalancesAfter[1]).to.eq(ammBalancesBefore[1] + amountB);
+    const poolBalancesAfter = await reservesAreInSync(tokenA, tokenB);
+    expect(poolBalancesAfter[0]).to.eq(poolBalancesBefore[0] + amountA);
+    expect(poolBalancesAfter[1]).to.eq(poolBalancesBefore[1] + amountB);
   }
 
   test("fails to add liquidity if tokens are the same", async () => {
@@ -214,8 +214,8 @@ describe("amm", () => {
   ) {
     const { balanceA, balanceB, reserves } =
       await ethers.utils.resolveProperties({
-        balanceA: balanceOfPublic(tokenA, blockchain.ammContract.address),
-        balanceB: balanceOfPublic(tokenB, blockchain.ammContract.address),
+        balanceA: balanceOfPublic(tokenA, blockchain.poolContract.address),
+        balanceB: balanceOfPublic(tokenB, blockchain.poolContract.address),
         reserves: getReserves(tokenA, tokenB),
       });
     expect(reserves[0]).to.eq(balanceA);

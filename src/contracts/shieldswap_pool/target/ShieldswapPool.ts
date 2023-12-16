@@ -20,20 +20,20 @@ import {
   PublicKey,
   Wallet,
 } from '@aztec/aztec.js';
-import AmmContractArtifactJson from './Amm.json' assert { type: 'json' };
-export const AmmContractArtifact = AmmContractArtifactJson as ContractArtifact;
+import ShieldswapPoolContractArtifactJson from './ShieldswapPool.json' assert { type: 'json' };
+export const ShieldswapPoolContractArtifact = ShieldswapPoolContractArtifactJson as ContractArtifact;
 
 /**
- * Type-safe interface for contract Amm;
+ * Type-safe interface for contract ShieldswapPool;
  */
-export class AmmContract extends ContractBase {
+export class ShieldswapPoolContract extends ContractBase {
   
   private constructor(
     completeAddress: CompleteAddress,
     wallet: Wallet,
     portalContract = EthAddress.ZERO
   ) {
-    super(completeAddress, AmmContractArtifact, wallet, portalContract);
+    super(completeAddress, ShieldswapPoolContractArtifact, wallet, portalContract);
   }
   
 
@@ -48,7 +48,7 @@ export class AmmContract extends ContractBase {
     address: AztecAddress,
     wallet: Wallet,
   ) {
-    return Contract.at(address, AmmContract.artifact, wallet) as Promise<AmmContract>;
+    return Contract.at(address, ShieldswapPoolContract.artifact, wallet) as Promise<ShieldswapPoolContract>;
   }
 
   
@@ -56,14 +56,14 @@ export class AmmContract extends ContractBase {
    * Creates a tx to deploy a new instance of this contract.
    */
   public static deploy(wallet: Wallet, admin: AztecAddressLike, token0: AztecAddressLike, token1: AztecAddressLike) {
-    return new DeployMethod<AmmContract>(Point.ZERO, wallet, AmmContractArtifact, Array.from(arguments).slice(1));
+    return new DeployMethod<ShieldswapPoolContract>(Point.ZERO, wallet, ShieldswapPoolContractArtifact, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public key to derive the address.
    */
   public static deployWithPublicKey(publicKey: PublicKey, wallet: Wallet, admin: AztecAddressLike, token0: AztecAddressLike, token1: AztecAddressLike) {
-    return new DeployMethod<AmmContract>(publicKey, wallet, AmmContractArtifact, Array.from(arguments).slice(2));
+    return new DeployMethod<ShieldswapPoolContract>(publicKey, wallet, ShieldswapPoolContractArtifact, Array.from(arguments).slice(2));
   }
   
 
@@ -72,7 +72,7 @@ export class AmmContract extends ContractBase {
    * Returns this contract's artifact.
    */
   public static get artifact(): ContractArtifact {
-    return AmmContractArtifact;
+    return ShieldswapPoolContractArtifact;
   }
   
 

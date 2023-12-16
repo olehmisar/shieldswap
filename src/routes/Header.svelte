@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { clearAmmContractCache, clearContractsCache } from "$lib/blockchain";
+  import { clearContractsCache, clearPoolContractCache } from "$lib/blockchain";
   import { wallet } from "$lib/wallet";
   import WalletSelector from "./WalletSelector.svelte";
 
@@ -53,12 +53,12 @@
           on:click={() => {
             if (
               !confirm(
-                "Are you sure you want to redeploy AMM (it takes couple minutes)?",
+                "Are you sure you want to redeploy the pool (it takes couple minutes)?",
               )
             ) {
               return;
             }
-            clearAmmContractCache();
+            clearPoolContractCache();
             window.location.reload();
           }}
         >
