@@ -1,5 +1,7 @@
 <script lang="ts">
+  import logo from "$lib/assets/logo.svg";
   import { clearContractsCache, clearPoolContractCache } from "$lib/blockchain";
+  import ButtonConfirm from "$lib/components/ButtonConfirm.svelte";
   import { wallet } from "$lib/wallet";
   import WalletSelector from "./WalletSelector.svelte";
 
@@ -22,6 +24,9 @@
 <header>
   <nav class="container-fluid">
     <ul>
+      <li>
+        <a href="/"><img src={logo} alt="logo" style="height: 2.3em" /></a>
+      </li>
       <li><a href="/" class="secondary"><strong>ShieldSwap</strong></a></li>
     </ul>
     <ul>
@@ -30,40 +35,35 @@
       {/each}
 
       <li>
-        <button
-          class="outline secondary"
-          on:click={() => {
-            if (
-              !confirm(
-                "Are you sure you want to redeploy contracts (it takes couple minutes)?",
-              )
-            ) {
-              return;
-            }
-            clearContractsCache();
-            window.location.reload();
-          }}
-        >
-          Redeploy all
-        </button>
-      </li>
-      <li>
-        <button
-          class="outline secondary"
-          on:click={() => {
-            if (
-              !confirm(
-                "Are you sure you want to redeploy the pool (it takes couple minutes)?",
-              )
-            ) {
-              return;
-            }
-            clearPoolContractCache();
-            window.location.reload();
-          }}
-        >
-          Redeploy DEX
-        </button>
+        <details class="dropdown">
+          <summary>Reset</summary>
+          <ul>
+            <li>
+              <ButtonConfirm
+                confirmText="Are you sure you want to redeploy contracts (it takes couple minutes)?"
+                class="outline secondary"
+                onclick={() => {
+                  clearContractsCache();
+                  window.location.reload();
+                }}
+              >
+                Reset all contracts
+              </ButtonConfirm>
+            </li>
+            <li>
+              <ButtonConfirm
+                class="outline secondary"
+                confirmText="Are you sure you want to redeploy the pool (it takes couple minutes)?"
+                onclick={() => {
+                  clearPoolContractCache();
+                  window.location.reload();
+                }}
+              >
+                Reset pool
+              </ButtonConfirm>
+            </li>
+          </ul>
+        </details>
       </li>
 
       {#if $wallet}

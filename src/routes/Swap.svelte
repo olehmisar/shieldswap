@@ -58,58 +58,40 @@
   }
 </script>
 
-<h1 style="margin-bottom: 0">Swap tokens</h1>
+<h1>Swap tokens</h1>
 
 <Form {oninput} {onsubmit} let:loading>
   <h4>From token</h4>
-  <div class="grid">
-    <label for="tokenIn">
-      Swap from
-      <select id="tokenIn" name="tokenIn" bind:value={selectedTokenIn}>
-        {#each $blockchain.tokens as token (token.contract.address.toString())}
-          <option value={token.contract.address.toString()}>
-            {token.symbol}
-          </option>
-        {/each}
-      </select>
-    </label>
-    <label for="amountIn">
-      Amount from
-      <input
-        type="number"
-        id="amountIn"
-        name="amountIn"
-        required
-        placeholder="0"
-      />
-    </label>
+  <div role="group">
+    <select name="tokenIn" bind:value={selectedTokenIn}>
+      {#each $blockchain.tokens as token (token.contract.address.toString())}
+        <option value={token.contract.address.toString()}>
+          {token.symbol}
+        </option>
+      {/each}
+    </select>
+    <input type="number" name="amountIn" required placeholder="0" />
   </div>
 
   <h4>To token</h4>
-  <div class="grid">
-    <label for="tokenOut">
-      Swap to
-      <select id="tokenOut" name="tokenOut">
-        {#each $blockchain.tokens.filter((t) => t.contract.address
-              .toString()
-              .toLowerCase() !== selectedTokenIn.toLowerCase()) as token (token.contract.address.toString())}
-          <option value={token.contract.address.toString()}>
-            {token.symbol}
-          </option>
-        {/each}
-      </select>
-    </label>
-    <label for="amountOut">
-      Amount to
-      <input
-        readonly
-        value={$swapInfo.isSuccess
-          ? $swapInfo.data?.swapEstimate.amountOut ?? ""
-          : $swapInfo.isError
-            ? String($swapInfo.error.message)
-            : "Loading..."}
-      />
-    </label>
+  <div role="group">
+    <select name="tokenOut">
+      {#each $blockchain.tokens.filter((t) => t.contract.address
+            .toString()
+            .toLowerCase() !== selectedTokenIn.toLowerCase()) as token (token.contract.address.toString())}
+        <option value={token.contract.address.toString()}>
+          {token.symbol}
+        </option>
+      {/each}
+    </select>
+    <input
+      readonly
+      value={$swapInfo.isSuccess
+        ? $swapInfo.data?.swapEstimate.amountOut ?? ""
+        : $swapInfo.isError
+          ? String($swapInfo.error.message)
+          : "Loading..."}
+    />
   </div>
   <SubmitButton {loading}>Swap</SubmitButton>
 </Form>

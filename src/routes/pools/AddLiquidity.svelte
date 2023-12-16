@@ -28,7 +28,7 @@
   }
 </script>
 
-<h2 style="margin-bottom: 0">Add liquidity</h2>
+<h2>Add liquidity</h2>
 <p style="font-style: italic">
   Currenly you can add liquidity with any ratio. Will be fixed later
 </p>

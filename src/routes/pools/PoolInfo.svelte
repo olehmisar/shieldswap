@@ -32,19 +32,20 @@
   });
 </script>
 
-<h2 style="margin-bottom: 0">Pool info</h2>
+<h1>Pool info</h1>
 <p>Pool address: {$blockchain.poolContract.address.toString()}</p>
 
-<h4 style="margin-bottom: 0">
+<h2>
   Reserves
   <LoadingButton
     class="outline secondary"
     inline
+    style="margin-bottom: 0"
     onclick={() => $poolInfo.refetch()}
   >
     Refresh
   </LoadingButton>
-</h4>
+</h2>
 <Query query={poolInfo} let:data>
   <table>
     <thead>

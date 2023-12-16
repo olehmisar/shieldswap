@@ -38,6 +38,7 @@
   "dependencies": {
     "@aztec/aztec.js": "0.16.7",
     "@aztec/noir-contracts": "0.16.7",
+    "@picocss/pico": "^2.0.0-alpha1",
     "@tanstack/svelte-query": "^5.13.4",
     "ethers": "^5.7.2",
     "ts-essentials": "^9.4.1"

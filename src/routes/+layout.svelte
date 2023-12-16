@@ -2,7 +2,9 @@
   import { browser } from "$app/environment";
   import { blockchain, setupBlockchain } from "$lib/blockchain";
   import { wallet } from "$lib/wallet";
+  import "@picocss/pico";
   import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
+  import "../app.css";
   import Header from "./Header.svelte";
 
   const queryClient = new QueryClient({

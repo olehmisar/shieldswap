@@ -34,16 +34,17 @@
   });
 </script>
 
-<h3 style="margin-bottom: 0">
+<h2>
   My balances
   <LoadingButton
     class="outline secondary"
     inline
+    style="margin-bottom: 0"
     onclick={() => $balances.refetch()}
   >
     Refresh
   </LoadingButton>
-</h3>
+</h2>
 <Query query={balances} let:data>
   <ul>
     {#each data as balance (balance)}
