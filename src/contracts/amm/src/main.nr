@@ -131,31 +131,48 @@ contract Amm {
         let this = context.this_address();
 
         // optimistically transfer tokens out
-        // TODO: with if statements this is not compiling (compiler bug probably)
-        if amount0_out != 0 {
-            Token::at(token0.address).transfer_public(&mut context, this, to.address, amount0_out, 0);
-        }
-        if amount1_out != 0 {
-            Token::at(token1.address).transfer_public(&mut context, this, to.address, amount1_out, 0);
-        }
+        context.call_public_function(
+            context.this_address(),
+            compute_selector("_transfer_if_not_zero((Field),(Field),Field,Field,Field,Field,(Field),(Field))"),
+            [token0.address, token1.address, amount0_out, amount1_out, 0, 0, this, to.address]
+        );
 
         if (should_call) {
             ShieldswapCalee::at(to.address).shieldswap_call(&mut context, amount0_out, amount1_out);
         }
 
         // transfer tokens in
-        if amount0_in != 0 {
-            Token::at(token0.address).transfer_public(&mut context, from, this, amount0_in, nonce0);
-        }
-        if amount1_in != 0 {
-            Token::at(token1.address).transfer_public(&mut context, from, this, amount1_in, nonce1);
-        }
+        context.call_public_function(
+            context.this_address(),
+            compute_selector("_transfer_if_not_zero((Field),(Field),Field,Field,Field,Field,(Field),(Field))"),
+            [token0.address, token1.address, amount0_in, amount1_in, nonce0, nonce1, from, this]
+        );
 
         context.call_public_function(
             context.this_address(),
             compute_selector("_finalize_swap((Field),(Field),Field,Field,Field,Field)"),
             [token0.address, token1.address, amount0_in, amount0_out, amount1_in, amount1_out]
         );
+    }
+
+    // this is needed because the compiler allows only up to 4 public calls per function
+    #[aztec(public)]
+    internal fn _transfer_if_not_zero(
+        token0: AztecAddress,
+        token1: AztecAddress,
+        amount0: Field,
+        amount1: Field,
+        nonce0: Field,
+        nonce1: Field,
+        from: AztecAddress,
+        to: AztecAddress
+    ) {
+        if amount0 != 0 {
+            Token::at(token0.address).transfer_public(&mut context, from.address, to.address, amount0, nonce0);
+        }
+        if amount1 != 0 {
+            Token::at(token1.address).transfer_public(&mut context, from.address, to.address, amount1, nonce1);
+        }
     }
 
     #[aztec(private)]

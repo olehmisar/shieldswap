@@ -19,16 +19,8 @@
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     console.log("data", data);
-    const tokenIn = $blockchain.tokens.find(
-      (t) =>
-        t.contract.address.toString().toLowerCase() ===
-        (data.tokenIn as string).toLowerCase(),
-    );
-    const tokenOut = $blockchain.tokens.find(
-      (t) =>
-        t.contract.address.toString().toLowerCase() ===
-        (data.tokenOut as string).toLowerCase(),
-    );
+    const tokenIn = $blockchain.getToken(data.tokenIn.toString());
+    const tokenOut = $blockchain.getToken(data.tokenOut.toString());
     assert(tokenIn && tokenOut, "invalid token selection");
     const amountIn = BigInt(data.amountIn.toString());
     const swapInput = {

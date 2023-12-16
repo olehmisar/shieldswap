@@ -88,6 +88,9 @@ export class AmmContract extends ContractBase {
     /** _init(admin: struct, token0: struct, token1: struct) */
     _init: ((admin: AztecAddressLike, token0: AztecAddressLike, token1: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** _transfer_if_not_zero(token0: struct, token1: struct, amount0: field, amount1: field, nonce0: field, nonce1: field, from: struct, to: struct) */
+    _transfer_if_not_zero: ((token0: AztecAddressLike, token1: AztecAddressLike, amount0: FieldLike, amount1: FieldLike, nonce0: FieldLike, nonce1: FieldLike, from: AztecAddressLike, to: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** add_liquidity(token0: struct, token1: struct, amount0: field, amount1: field, nonce0: field, nonce1: field) */
     add_liquidity: ((token0: AztecAddressLike, token1: AztecAddressLike, amount0: FieldLike, amount1: FieldLike, nonce0: FieldLike, nonce1: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
