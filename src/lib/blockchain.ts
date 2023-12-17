@@ -89,7 +89,6 @@ export async function setupBlockchain(log = defaultLog) {
     (address) => ShieldswapPoolContract.at(address, deployer),
     async () => {
       const [token0, token1] = sortTokens(wethToken, daiToken);
-      log("tokens", token0.address.toString(), token1.address.toString());
       poolContract = await ShieldswapPoolContract.deploy(
         deployer,
         deployer.getAddress(),
@@ -205,8 +204,16 @@ export async function getContractCached<T>(
   if (!cachedAddress) {
     return undefined;
   }
-  log(`Using cached ${name}...`);
-  return connect(AztecAddress.fromString(cachedAddress));
+  try {
+    const connected = await connect(AztecAddress.fromString(cachedAddress));
+    log(`Using cached ${name}...`);
+    return connected;
+  } catch (e: any) {
+    if (e?.message.includes("is not deployed")) {
+      return undefined;
+    }
+    throw e;
+  }
 }
 
 export async function deployContractCached<T extends { address: AztecAddress }>(

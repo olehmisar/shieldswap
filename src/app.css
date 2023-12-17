@@ -35,3 +35,12 @@ input[type="number"] {
   width: 100%;
   text-align: left;
 }
+
+.dropdown summary {
+  height: 2.35rem !important;
+}
+
+.dropdown.right ul {
+  right: 0;
+  left: auto;
+}

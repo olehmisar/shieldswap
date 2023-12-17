@@ -4,6 +4,7 @@
   import { wallet } from "$lib/wallet";
   import "@picocss/pico";
   import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
+  import { Toaster } from "svelte-french-toast";
   import "../app.css";
   import Header from "./Header.svelte";
 
@@ -26,9 +27,9 @@
   });
 </script>
 
-<Header />
-
 <QueryClientProvider client={queryClient}>
+  <Header />
+
   {#if !$blockchain}
     {#each logs as log}
       <p>{log}</p>
@@ -41,3 +42,5 @@
     {String(e)}
   {/await}
 </QueryClientProvider>
+
+<Toaster position={"bottom-right"} />

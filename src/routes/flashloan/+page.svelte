@@ -113,13 +113,13 @@
       $lastBalances.refetch();
     }}
   >
-    Reset last balances
+    Reset last borrow record
   </LoadingButton>
 
   <h4>Last recorded borrow</h4>
   <Query query={lastBalances} let:data>
     {#if !data}
-      <p>Deploy the flash loan contract to see balances</p>
+      <p>Deploy the flash loan contract to see last borrow record</p>
     {:else}
       <ul>
         {#each data.tokens as token, i (token.toString())}

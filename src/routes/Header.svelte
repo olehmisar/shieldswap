@@ -35,7 +35,7 @@
       {/each}
 
       <li>
-        <details class="dropdown">
+        <details class="dropdown right">
           <summary>Reset</summary>
           <ul>
             <li>
