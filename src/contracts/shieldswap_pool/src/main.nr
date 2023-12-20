@@ -40,7 +40,7 @@ contract ShieldswapPool {
     };
 
     use crate::types::safe_u120_serialization::{SAFE_U120_SERIALIZED_LEN, SafeU120SerializationMethods};
-    use crate::interfaces::{ShieldswapCalee, Token};
+    use crate::interfaces::{ShieldswapCallee, Token};
 
     struct Storage {
         admin: PublicState<AztecAddress, AZTEC_ADDRESS_SERIALIZED_LEN>,
@@ -138,7 +138,7 @@ contract ShieldswapPool {
         );
 
         if (should_call) {
-            ShieldswapCalee::at(to.address).shieldswap_call(&mut context, amount0_out, amount1_out);
+            ShieldswapCallee::at(to.address).shieldswap_call(&mut context, amount0_out, amount1_out);
         }
 
         // transfer tokens in
