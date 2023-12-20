@@ -208,6 +208,7 @@ export async function getContractCached<T>(
     const connected = await connect(AztecAddress.fromString(cachedAddress));
     log(`Using cached ${name}...`);
     return connected;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e?.message.includes("is not deployed")) {
       return undefined;
