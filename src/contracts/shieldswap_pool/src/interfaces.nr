@@ -39,11 +39,11 @@ impl Token {
 
 }
 
-struct ShieldswapCalee {
+struct ShieldswapCallee {
   address: Field,
 }
 
-impl ShieldswapCalee {
+impl ShieldswapCallee {
   pub fn at(address: Field) -> Self {
     Self { address }
   }
