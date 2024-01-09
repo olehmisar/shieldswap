@@ -1,7 +1,8 @@
 # ShieldSwap DEX
 
-A Decentralized Exchange implemented in Noir for Aztec Network. Frontend is implemented in Svelte.
-<img width="809" alt="image" src="https://github.com/olehmisar/aztec-amm/assets/29802592/b024170b-9fa5-449b-aee5-ff9bf5a1bd9e">
+A Decentralized Exchange implemented in Noir for Aztec Network https://shieldswap.vercel.app.
+<img width="991" alt="image" src="https://github.com/olehmisar/shieldswap/assets/29802592/70651eba-15a4-4d8d-87f6-dc45e590f3fd">
+<img width="991" alt="image" src="https://github.com/olehmisar/shieldswap/assets/29802592/a7b27098-9baa-4fac-bb76-6b1ca0c6d4c3">
 
 ## Features
 
@@ -9,8 +10,8 @@ A Decentralized Exchange implemented in Noir for Aztec Network. Frontend is impl
 - [x] Add liquidity to a pool
 - [x] Swap tokens in a pool
 - [x] Flash swaps (flash loans)
-- [ ] LP tokens
-- [ ] Remove liquidity
+- [x] LP tokens
+- [x] Remove liquidity
 - [ ] Pool factory
 - [ ] Trading fees
 
@@ -22,16 +23,14 @@ To run locally you need to have Aztec Sandbox running on "localhost:8080". Then 
 yarn dev
 ```
 
-**WARNING**: First open of the page will take a while to deploy and initialize tokens and DEX contracts(logs will be printed to screen and console).
+**WARNING**: The first open will take a few minutes to deploy and initialize tokens and DEX contracts(progress will be printed to screen and console).
 
-## Building
+## Build
 
-To create a production version of your app:
+To create a production version of the app:
 
 ```bash
 yarn build
 ```
 
-You can preview the production build with `yarn preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+Preview via `yarn preview`. To deploy the app, read more [here](https://kit.svelte.dev/docs/adapters).
