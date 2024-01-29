@@ -1,5 +1,7 @@
 # ShieldSwap DEX
 
+# _NOTE: the repository was moved to the ShieldSwap monorepo._
+
 A Decentralized Exchange implemented in Noir for Aztec Network https://shieldswap.vercel.app.
 <img width="941" alt="image" src="https://github.com/olehmisar/shieldswap/assets/29802592/f05ea359-e6a1-44f2-8158-deced6ee82f8">
 
